@@ -10,14 +10,18 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.usagecontrol.core.ui.theme.UsageControlTheme
 import com.usagecontrol.feature.learning.LearningScreen
 import com.usagecontrol.feature.lockcontrol.LockControlScreen
 import com.usagecontrol.feature.notifications.NotificationsScreen
+import com.usagecontrol.feature.rules.RuleEditorScreen
+import com.usagecontrol.feature.rules.RuleListScreen
 import com.usagecontrol.feature.screentime.ScreenTimeScreen
 import com.usagecontrol.feature.settings.SettingsScreen
 import com.usagecontrol.navigation.AppScreen
@@ -42,24 +46,29 @@ private fun UsageControlApp() {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
+    // Hide bottom bar on detail screens
+    val showBottomBar = currentRoute in AppScreen.entries.map { it.route }
+
     Scaffold(
         bottomBar = {
-            NavigationBar {
-                AppScreen.entries.forEach { screen ->
-                    NavigationBarItem(
-                        selected = currentRoute == screen.route,
-                        onClick = {
-                            navController.navigate(screen.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
+            if (showBottomBar) {
+                NavigationBar {
+                    AppScreen.entries.forEach { screen ->
+                        NavigationBarItem(
+                            selected = currentRoute == screen.route,
+                            onClick = {
+                                navController.navigate(screen.route) {
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
                                 }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        },
-                        icon = { Icon(screen.icon, contentDescription = screen.title) },
-                        label = { Text(screen.title) },
-                    )
+                            },
+                            icon = { Icon(screen.icon, contentDescription = screen.title) },
+                            label = { Text(screen.title) },
+                        )
+                    }
                 }
             }
         },
@@ -71,11 +80,54 @@ private fun UsageControlApp() {
                 .fillMaxSize()
                 .padding(innerPadding),
         ) {
-            composable(AppScreen.Notifications.route) { NotificationsScreen() }
-            composable(AppScreen.ScreenTime.route) { ScreenTimeScreen() }
-            composable(AppScreen.Controls.route) { LockControlScreen() }
+            // Main tabs
+            composable(AppScreen.Notifications.route) {
+                NotificationsScreen(
+                    onNavigateToRules = { navController.navigate("rules/NOTIFICATION") },
+                )
+            }
+            composable(AppScreen.ScreenTime.route) {
+                ScreenTimeScreen(
+                    onNavigateToRules = { navController.navigate("rules/SCREEN_TIME") },
+                )
+            }
+            composable(AppScreen.Controls.route) {
+                LockControlScreen(
+                    onNavigateToRules = { navController.navigate("rules/LOCK_SOUND") },
+                )
+            }
             composable(AppScreen.Insights.route) { LearningScreen() }
             composable(AppScreen.Settings.route) { SettingsScreen() }
+
+            // Rule list (per-pillar or all)
+            composable(
+                route = "rules/{pillar}",
+                arguments = listOf(navArgument("pillar") { type = NavType.StringType }),
+            ) {
+                RuleListScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    onCreateRule = { pillar ->
+                        val route = if (pillar != null) "rule-editor/0/$pillar" else "rule-editor/0/NOTIFICATION"
+                        navController.navigate(route)
+                    },
+                    onEditRule = { ruleId ->
+                        navController.navigate("rule-editor/$ruleId/NOTIFICATION")
+                    },
+                )
+            }
+
+            // Rule editor (create or edit)
+            composable(
+                route = "rule-editor/{ruleId}/{pillar}",
+                arguments = listOf(
+                    navArgument("ruleId") { type = NavType.LongType; defaultValue = 0L },
+                    navArgument("pillar") { type = NavType.StringType; defaultValue = "NOTIFICATION" },
+                ),
+            ) {
+                RuleEditorScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                )
+            }
         }
     }
 }

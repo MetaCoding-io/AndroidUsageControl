@@ -25,7 +25,9 @@ object DatabaseModule {
             context,
             UsageControlDatabase::class.java,
             "usage_control.db"
-        ).build()
+        )
+            .addMigrations(UsageControlDatabase.MIGRATION_1_2)
+            .build()
     }
 
     @Provides

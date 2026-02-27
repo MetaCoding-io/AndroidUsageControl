@@ -6,7 +6,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -20,12 +19,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.usagecontrol.core.common.TimeUtils
 import com.usagecontrol.core.model.NotificationAction
 import com.usagecontrol.core.model.NotificationRecord
-import com.usagecontrol.core.model.Rule
 import com.usagecontrol.core.ui.component.EmptyState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationsScreen(
+    onNavigateToRules: () -> Unit = {},
     viewModel: NotificationsViewModel = hiltViewModel(),
 ) {
     val notifications by viewModel.notifications.collectAsStateWithLifecycle()
@@ -33,14 +32,12 @@ fun NotificationsScreen(
     val selectedApp by viewModel.selectedApp.collectAsStateWithLifecycle()
     val rules by viewModel.rules.collectAsStateWithLifecycle()
 
-    var showRulesSheet by remember { mutableStateOf(false) }
-
     Column(modifier = Modifier.fillMaxSize()) {
         // Top bar
         TopAppBar(
             title = { Text("Notifications") },
             actions = {
-                TextButton(onClick = { showRulesSheet = true }) {
+                TextButton(onClick = onNavigateToRules) {
                     Icon(Icons.Default.NotificationsOff, contentDescription = null)
                     Spacer(Modifier.width(4.dp))
                     Text("Rules (${rules.size})")
@@ -91,16 +88,6 @@ fun NotificationsScreen(
         }
     }
 
-    // Rules bottom sheet
-    if (showRulesSheet) {
-        ModalBottomSheet(onDismissRequest = { showRulesSheet = false }) {
-            RulesSheet(
-                rules = rules,
-                onToggle = { id, enabled -> viewModel.toggleRule(id, enabled) },
-                onDelete = { viewModel.deleteRule(it) },
-            )
-        }
-    }
 }
 
 @Composable
@@ -194,52 +181,3 @@ private fun NotificationItem(
     }
 }
 
-@Composable
-private fun RulesSheet(
-    rules: List<Rule>,
-    onToggle: (Long, Boolean) -> Unit,
-    onDelete: (Rule) -> Unit,
-) {
-    Column(modifier = Modifier.padding(16.dp)) {
-        Text(
-            text = "Notification Rules",
-            style = MaterialTheme.typography.headlineSmall,
-        )
-        Spacer(Modifier.height(16.dp))
-
-        if (rules.isEmpty()) {
-            Text(
-                text = "No rules yet. Tap a notification and choose 'Auto-dismiss this app' to create one.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        } else {
-            rules.forEach { rule ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(rule.name, style = MaterialTheme.typography.bodyMedium)
-                        Text(
-                            "${rule.conditions.size} conditions, ${rule.actions.size} actions",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                    Switch(
-                        checked = rule.enabled,
-                        onCheckedChange = { onToggle(rule.id, it) },
-                    )
-                    IconButton(onClick = { onDelete(rule) }) {
-                        Icon(Icons.Default.Delete, contentDescription = "Delete rule")
-                    }
-                }
-            }
-        }
-
-        Spacer(Modifier.height(32.dp))
-    }
-}

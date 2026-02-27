@@ -1,8 +1,10 @@
 package com.usagecontrol.core.rules
 
 import com.usagecontrol.core.common.TimeUtils
+import com.usagecontrol.core.model.ConditionGroup
 import com.usagecontrol.core.model.ConditionType
 import com.usagecontrol.core.model.ContextSnapshot
+import com.usagecontrol.core.model.Rule
 import com.usagecontrol.core.model.RuleCondition
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -89,6 +91,35 @@ class ConditionEvaluator @Inject constructor() {
     ): Boolean {
         if (conditions.isEmpty()) return true
         return conditions.all { evaluate(it, context) }
+    }
+
+    /**
+     * Evaluate a condition group (AND within the group).
+     */
+    fun evaluateGroup(
+        group: ConditionGroup,
+        context: EvaluationContext,
+    ): Boolean {
+        return evaluateAll(group.conditions, context)
+    }
+
+    /**
+     * Evaluate a complete rule with support for compound conditions.
+     *
+     * If the rule has conditionGroups, uses OR logic between groups (AND within each group).
+     * Otherwise falls back to flat conditions list with AND logic.
+     */
+    fun evaluateRule(
+        rule: Rule,
+        context: EvaluationContext,
+    ): Boolean {
+        return if (rule.isCompound) {
+            // OR between groups: at least one group must match
+            rule.conditionGroups.any { group -> evaluateGroup(group, context) }
+        } else {
+            // Legacy flat conditions: all must match (AND)
+            evaluateAll(rule.conditions, context)
+        }
     }
 }
 

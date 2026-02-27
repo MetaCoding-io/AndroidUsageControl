@@ -20,6 +20,7 @@ import com.usagecontrol.core.model.SoundPreset
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LockControlScreen(
+    onNavigateToRules: () -> Unit = {},
     viewModel: LockControlViewModel = hiltViewModel(),
 ) {
     val presets by viewModel.presets.collectAsStateWithLifecycle()
@@ -29,6 +30,11 @@ fun LockControlScreen(
         TopAppBar(
             title = { Text("Controls") },
             actions = {
+                TextButton(onClick = onNavigateToRules) {
+                    Icon(Icons.Default.Tune, contentDescription = null)
+                    Spacer(Modifier.width(4.dp))
+                    Text("Rules")
+                }
                 IconButton(onClick = { showAddDialog = true }) {
                     Icon(Icons.Default.Add, contentDescription = "Add preset")
                 }

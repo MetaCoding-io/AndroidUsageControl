@@ -79,6 +79,7 @@ fun RuleEntity.toModel() = Rule(
     pillar = RulePillar.valueOf(pillar),
     createdBy = RuleCreator.valueOf(createdBy),
     conditions = parseConditionsJson(conditionsJson),
+    conditionGroups = parseConditionGroupsJson(conditionGroupsJson),
     actions = parseActionsJson(actionsJson),
     createdAt = createdAt,
     updatedAt = updatedAt,
@@ -92,6 +93,7 @@ fun Rule.toEntity() = RuleEntity(
     pillar = pillar.name,
     createdBy = createdBy.name,
     conditionsJson = conditionsToJson(conditions),
+    conditionGroupsJson = conditionGroupsToJson(conditionGroups),
     actionsJson = actionsToJson(actions),
     createdAt = createdAt,
     updatedAt = updatedAt,
@@ -183,6 +185,40 @@ private fun actionsToJson(actions: List<RuleAction>): String {
         obj.put("type", a.type.name)
         obj.put("params", mapToJson(a.params))
         arr.put(obj)
+    }
+    return arr.toString()
+}
+
+private fun parseConditionGroupsJson(json: String): List<ConditionGroup> {
+    if (json.isBlank() || json == "[]") return emptyList()
+    val arr = JSONArray(json)
+    return (0 until arr.length()).map { i ->
+        val groupObj = arr.getJSONObject(i)
+        val conditionsArr = groupObj.optJSONArray("conditions") ?: JSONArray()
+        val conditions = (0 until conditionsArr.length()).map { j ->
+            val condObj = conditionsArr.getJSONObject(j)
+            RuleCondition(
+                type = ConditionType.valueOf(condObj.getString("type")),
+                params = parseMapJson(condObj.optString("params", "{}")),
+            )
+        }
+        ConditionGroup(conditions = conditions)
+    }
+}
+
+private fun conditionGroupsToJson(groups: List<ConditionGroup>): String {
+    val arr = JSONArray()
+    groups.forEach { group ->
+        val groupObj = JSONObject()
+        val conditionsArr = JSONArray()
+        group.conditions.forEach { c ->
+            val condObj = JSONObject()
+            condObj.put("type", c.type.name)
+            condObj.put("params", mapToJson(c.params))
+            conditionsArr.put(condObj)
+        }
+        groupObj.put("conditions", conditionsArr)
+        arr.put(groupObj)
     }
     return arr.toString()
 }

@@ -2,6 +2,8 @@ package com.usagecontrol.core.database
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.usagecontrol.core.database.dao.ContextSnapshotDao
 import com.usagecontrol.core.database.dao.NotificationDao
 import com.usagecontrol.core.database.dao.RuleDao
@@ -21,7 +23,7 @@ import com.usagecontrol.core.database.entity.UsageEntity
         SoundPresetEntity::class,
         ContextSnapshotEntity::class,
     ],
-    version = 1,
+    version = 2,
     exportSchema = true,
 )
 abstract class UsageControlDatabase : RoomDatabase() {
@@ -30,4 +32,12 @@ abstract class UsageControlDatabase : RoomDatabase() {
     abstract fun ruleDao(): RuleDao
     abstract fun soundPresetDao(): SoundPresetDao
     abstract fun contextSnapshotDao(): ContextSnapshotDao
+
+    companion object {
+        val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE rules ADD COLUMN conditionGroupsJson TEXT NOT NULL DEFAULT '[]'")
+            }
+        }
+    }
 }

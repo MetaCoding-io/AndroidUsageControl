@@ -29,6 +29,7 @@ include(":feature:feature-notifications")
 include(":feature:feature-learning")
 include(":feature:feature-screentime")
 include(":feature:feature-lockcontrol")
+include(":feature:feature-rules")
 include(":feature:feature-settings")
 
 // Service modules

@@ -53,6 +53,7 @@ dependencies {
     implementation(project(":feature:feature-learning"))
     implementation(project(":feature:feature-screentime"))
     implementation(project(":feature:feature-lockcontrol"))
+    implementation(project(":feature:feature-rules"))
     implementation(project(":feature:feature-settings"))
 
     // Service modules

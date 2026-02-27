@@ -23,7 +23,7 @@ class RuleEngine @Inject constructor(
     ): List<Rule> {
         val rules = ruleDao.getEnabledByPillar(pillar.name).map { it.toModel() }
         return rules.filter { rule ->
-            conditionEvaluator.evaluateAll(rule.conditions, context)
+            conditionEvaluator.evaluateRule(rule, context)
         }
     }
 

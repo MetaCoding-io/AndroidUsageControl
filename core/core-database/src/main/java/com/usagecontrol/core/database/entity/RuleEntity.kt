@@ -12,8 +12,9 @@ data class RuleEntity(
     val priority: Int,
     val pillar: String,   // RulePillar name
     val createdBy: String, // RuleCreator name
-    val conditionsJson: String, // JSON-serialized List<RuleCondition>
-    val actionsJson: String,    // JSON-serialized List<RuleAction>
+    val conditionsJson: String,        // JSON-serialized List<RuleCondition>
+    val conditionGroupsJson: String = "[]", // JSON-serialized List<ConditionGroup>
+    val actionsJson: String,           // JSON-serialized List<RuleAction>
     val createdAt: Long,
     val updatedAt: Long,
 )
