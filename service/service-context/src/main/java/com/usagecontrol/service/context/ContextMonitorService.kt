@@ -12,6 +12,11 @@ import android.os.IBinder
 import com.usagecontrol.core.common.TimeUtils
 import com.usagecontrol.core.database.dao.ContextSnapshotDao
 import com.usagecontrol.core.database.entity.ContextSnapshotEntity
+import com.usagecontrol.core.database.toModel
+import com.usagecontrol.core.model.RulePillar
+import com.usagecontrol.core.rules.ActionExecutor
+import com.usagecontrol.core.rules.EvaluationContext
+import com.usagecontrol.core.rules.RuleEngine
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -25,6 +30,12 @@ import javax.inject.Inject
 class ContextMonitorService : Service() {
 
     @Inject lateinit var contextSnapshotDao: ContextSnapshotDao
+    @Inject lateinit var calendarReader: CalendarReader
+    @Inject lateinit var bluetoothScanner: BluetoothScanner
+    @Inject lateinit var soundPresetApplier: SoundPresetApplier
+    @Inject lateinit var ruleEngine: RuleEngine
+    @Inject lateinit var actionExecutor: ActionExecutor
+    @Inject lateinit var actionHandlerRegistrar: ActionHandlerRegistrar
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -32,6 +43,7 @@ class ContextMonitorService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        actionHandlerRegistrar.ensureRegistered()
         createNotificationChannel()
         startForeground(NOTIFICATION_ID, buildNotification())
         startPolling()
@@ -41,8 +53,10 @@ class ContextMonitorService : Service() {
         scope.launch {
             while (true) {
                 try {
-                    captureSnapshot()
-                } catch (e: Exception) {
+                    val snapshot = captureSnapshot()
+                    soundPresetApplier.evaluateAndApply(snapshot.wifiSsid)
+                    evaluateLockSoundRules(snapshot)
+                } catch (_: Exception) {
                     // Log but don't crash
                 }
                 delay(POLL_INTERVAL_MS)
@@ -50,9 +64,11 @@ class ContextMonitorService : Service() {
         }
     }
 
-    private suspend fun captureSnapshot() {
+    private suspend fun captureSnapshot(): ContextSnapshotEntity {
         val wifiSsid = getCurrentWifiSsid()
         val isCharging = isDeviceCharging()
+        val calendarEvent = calendarReader.getCurrentEvent()
+        val bluetoothDevice = bluetoothScanner.getConnectedDeviceName()
 
         val snapshot = ContextSnapshotEntity(
             timestamp = System.currentTimeMillis(),
@@ -61,11 +77,25 @@ class ContextMonitorService : Service() {
             timeOfDay = TimeUtils.currentTimeOfDay(),
             dayOfWeek = TimeUtils.currentDayOfWeek(),
             isCharging = isCharging,
-            calendarEvent = null, // TODO: implement calendar reading
-            bluetoothDevice = null, // TODO: implement BT scanning
+            calendarEvent = calendarEvent,
+            bluetoothDevice = bluetoothDevice,
         )
 
         contextSnapshotDao.insert(snapshot)
+        return snapshot
+    }
+
+    /**
+     * Evaluate LOCK_SOUND rules against the current context snapshot.
+     * Matching rules are executed via ActionExecutor which delegates to registered handlers.
+     */
+    private suspend fun evaluateLockSoundRules(snapshot: ContextSnapshotEntity) {
+        val snapshotModel = snapshot.toModel()
+        val evalContext = EvaluationContext(snapshot = snapshotModel)
+        val matchingRules = ruleEngine.findMatchingRules(RulePillar.LOCK_SOUND, evalContext)
+        if (matchingRules.isNotEmpty()) {
+            actionExecutor.executeAll(matchingRules)
+        }
     }
 
     @Suppress("DEPRECATION")
