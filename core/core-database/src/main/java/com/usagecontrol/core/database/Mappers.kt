@@ -1,9 +1,11 @@
 package com.usagecontrol.core.database
 
 import com.usagecontrol.core.database.dao.DismissStatsRow
+import com.usagecontrol.core.database.entity.ContextSnapshotEntity
 import com.usagecontrol.core.database.entity.NotificationEntity
 import com.usagecontrol.core.database.entity.RuleEntity
 import com.usagecontrol.core.database.entity.SoundPresetEntity
+import com.usagecontrol.core.database.entity.SuggestionEntity
 import com.usagecontrol.core.database.entity.UsageEntity
 import com.usagecontrol.core.model.*
 import org.json.JSONArray
@@ -43,6 +45,20 @@ fun NotificationRecord.toEntity() = NotificationEntity(
     userAction = userAction.name,
     actionTimestamp = actionTimestamp,
     ruleIdIfAutoDismissed = ruleIdIfAutoDismissed,
+)
+
+// -- ContextSnapshot --
+
+fun ContextSnapshotEntity.toModel() = ContextSnapshot(
+    id = id,
+    timestamp = timestamp,
+    locationType = LocationType.valueOf(locationType),
+    wifiSsid = wifiSsid,
+    timeOfDay = timeOfDay,
+    dayOfWeek = dayOfWeek,
+    isCharging = isCharging,
+    calendarEvent = calendarEvent,
+    bluetoothDevice = bluetoothDevice,
 )
 
 // -- Usage --
@@ -141,6 +157,36 @@ fun DismissStatsRow.toModel() = AppDismissStats(
     avgTimeToActionMs = avgTimeToActionMs,
 )
 
+// -- Suggestion --
+
+fun SuggestionEntity.toModel() = Suggestion(
+    id = id,
+    type = SuggestionType.valueOf(type),
+    appPackageName = appPackageName,
+    appName = appName,
+    reason = reason,
+    confidence = confidence,
+    ruleTemplate = parseRuleJson(ruleTemplateJson),
+    status = SuggestionStatus.valueOf(status),
+    createdAt = createdAt,
+    resolvedAt = resolvedAt,
+    acceptedRuleId = acceptedRuleId,
+)
+
+fun Suggestion.toEntity() = SuggestionEntity(
+    id = id,
+    type = type.name,
+    appPackageName = appPackageName,
+    appName = appName,
+    reason = reason,
+    confidence = confidence,
+    ruleTemplateJson = ruleToJson(ruleTemplate),
+    status = status.name,
+    createdAt = createdAt,
+    resolvedAt = resolvedAt,
+    acceptedRuleId = acceptedRuleId,
+)
+
 // -- JSON helpers --
 
 private fun parseConditionsJson(json: String): List<RuleCondition> {
@@ -221,6 +267,31 @@ private fun conditionGroupsToJson(groups: List<ConditionGroup>): String {
         arr.put(groupObj)
     }
     return arr.toString()
+}
+
+private fun parseRuleJson(json: String): Rule {
+    val obj = JSONObject(json)
+    return Rule(
+        name = obj.optString("name", ""),
+        pillar = RulePillar.valueOf(obj.optString("pillar", "NOTIFICATION")),
+        priority = obj.optInt("priority", 0),
+        createdBy = RuleCreator.valueOf(obj.optString("createdBy", "LEARNED")),
+        conditions = parseConditionsJson(obj.optString("conditions", "[]")),
+        conditionGroups = parseConditionGroupsJson(obj.optString("conditionGroups", "[]")),
+        actions = parseActionsJson(obj.optString("actions", "[]")),
+    )
+}
+
+private fun ruleToJson(rule: Rule): String {
+    val obj = JSONObject()
+    obj.put("name", rule.name)
+    obj.put("pillar", rule.pillar.name)
+    obj.put("priority", rule.priority)
+    obj.put("createdBy", rule.createdBy.name)
+    obj.put("conditions", conditionsToJson(rule.conditions))
+    obj.put("conditionGroups", conditionGroupsToJson(rule.conditionGroups))
+    obj.put("actions", actionsToJson(rule.actions))
+    return obj.toString()
 }
 
 private fun parseMapJson(json: String): Map<String, String> {

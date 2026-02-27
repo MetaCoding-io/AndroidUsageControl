@@ -3,6 +3,8 @@ package com.usagecontrol.feature.learning
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -12,6 +14,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.usagecontrol.core.model.AppDismissStats
+import com.usagecontrol.core.model.Suggestion
+import com.usagecontrol.core.model.SuggestionType
 import com.usagecontrol.core.ui.component.EmptyState
 import com.usagecontrol.core.ui.component.LoadingScreen
 import com.usagecontrol.core.ui.component.StatCard
@@ -24,9 +28,27 @@ fun LearningScreen(
     val stats by viewModel.stats.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val dayRange by viewModel.dayRange.collectAsStateWithLifecycle()
+    val suggestions by viewModel.suggestions.collectAsStateWithLifecycle()
+    val isAnalyzing by viewModel.isAnalyzing.collectAsStateWithLifecycle()
 
     Column(modifier = Modifier.fillMaxSize()) {
-        TopAppBar(title = { Text("Insights") })
+        TopAppBar(
+            title = { Text("Insights") },
+            actions = {
+                TextButton(
+                    onClick = { viewModel.runAnalysis() },
+                    enabled = !isAnalyzing,
+                ) {
+                    if (isAnalyzing) {
+                        CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
+                        Spacer(Modifier.width(8.dp))
+                    }
+                    Icon(Icons.Default.AutoAwesome, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(4.dp))
+                    Text("Analyze")
+                }
+            }
+        )
 
         // Time range selector
         Row(
@@ -46,51 +68,153 @@ fun LearningScreen(
 
         if (isLoading) {
             LoadingScreen()
-        } else if (stats.isEmpty()) {
-            EmptyState("No notification data yet. Stats will appear as notifications are captured.")
         } else {
-            // Summary stats
-            val totalNotifs = stats.sumOf { it.totalNotifications }
-            val totalDismissed = stats.sumOf { it.dismissedCount }
-            val totalOpened = stats.sumOf { it.openedCount }
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                StatCard(
-                    label = "Total",
-                    value = "$totalNotifs",
-                    modifier = Modifier.weight(1f),
-                )
-                StatCard(
-                    label = "Dismissed",
-                    value = "$totalDismissed",
-                    modifier = Modifier.weight(1f),
-                )
-                StatCard(
-                    label = "Opened",
-                    value = "$totalOpened",
-                    modifier = Modifier.weight(1f),
-                )
-            }
-
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-
-            Text(
-                text = "Per-App Breakdown",
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-            )
-
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(bottom = 16.dp),
             ) {
-                items(stats) { stat ->
-                    AppStatsItem(stat)
+                // Suggestions section
+                if (suggestions.isNotEmpty()) {
+                    item {
+                        Text(
+                            text = "Suggestions",
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                        )
+                    }
+                    items(suggestions, key = { it.id }) { suggestion ->
+                        SuggestionCard(
+                            suggestion = suggestion,
+                            onAccept = { viewModel.acceptSuggestion(suggestion) },
+                            onDismiss = { viewModel.dismissSuggestion(suggestion) },
+                        )
+                    }
+                    item {
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
+                    }
+                }
+
+                // Stats section
+                if (stats.isEmpty()) {
+                    item {
+                        EmptyState("No notification data yet. Stats will appear as notifications are captured.")
+                    }
+                } else {
+                    // Summary stats
+                    item {
+                        val totalNotifs = stats.sumOf { it.totalNotifications }
+                        val totalDismissed = stats.sumOf { it.dismissedCount }
+                        val totalOpened = stats.sumOf { it.openedCount }
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            StatCard(label = "Total", value = "$totalNotifs", modifier = Modifier.weight(1f))
+                            StatCard(label = "Dismissed", value = "$totalDismissed", modifier = Modifier.weight(1f))
+                            StatCard(label = "Opened", value = "$totalOpened", modifier = Modifier.weight(1f))
+                        }
+                    }
+
+                    item {
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                        Text(
+                            text = "Per-App Breakdown",
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                        )
+                    }
+
+                    items(stats) { stat ->
+                        AppStatsItem(stat)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SuggestionCard(
+    suggestion: Suggestion,
+    onAccept: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+        ),
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    imageVector = when (suggestion.type) {
+                        SuggestionType.AUTO_DISMISS_APP -> Icons.Default.NotificationsOff
+                        SuggestionType.QUICK_DISMISS_APP -> Icons.Default.Speed
+                        SuggestionType.TIME_BASED_DISMISS -> Icons.Default.Schedule
+                        SuggestionType.SCREEN_TIME_LIMIT -> Icons.Default.Timer
+                    },
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                    modifier = Modifier.size(24.dp),
+                )
+                Spacer(Modifier.width(12.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = suggestion.ruleTemplate.name,
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                    )
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        text = suggestion.reason,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f),
+                    )
+                }
+            }
+
+            // Confidence indicator
+            Spacer(Modifier.height(8.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = "Confidence: ${(suggestion.confidence * 100).toInt()}%",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f),
+                )
+                Spacer(Modifier.width(8.dp))
+                LinearProgressIndicator(
+                    progress = { suggestion.confidence },
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(4.dp),
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.1f),
+                )
+            }
+
+            // Action buttons
+            Spacer(Modifier.height(12.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+            ) {
+                OutlinedButton(onClick = onDismiss) {
+                    Text("Dismiss")
+                }
+                Spacer(Modifier.width(8.dp))
+                Button(onClick = onAccept) {
+                    Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(4.dp))
+                    Text("Create Rule")
                 }
             }
         }
@@ -127,9 +251,9 @@ private fun AppStatsItem(stat: AppDismissStats) {
             // Dismiss rate bar
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = "Dismiss rate: ${(stat.dismissRate * 100).toInt()}%",
+                    text = "Dismiss: ${(stat.dismissRate * 100).toInt()}%",
                     style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.width(120.dp),
+                    modifier = Modifier.width(100.dp),
                 )
                 LinearProgressIndicator(
                     progress = { stat.dismissRate },
@@ -149,9 +273,9 @@ private fun AppStatsItem(stat: AppDismissStats) {
             // Open rate bar
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = "Open rate: ${(stat.openRate * 100).toInt()}%",
+                    text = "Open: ${(stat.openRate * 100).toInt()}%",
                     style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.width(120.dp),
+                    modifier = Modifier.width(100.dp),
                 )
                 LinearProgressIndicator(
                     progress = { stat.openRate },
@@ -163,20 +287,14 @@ private fun AppStatsItem(stat: AppDismissStats) {
                 )
             }
 
-            // Suggestion hint
-            if (stat.dismissRate > 0.9f && stat.totalNotifications >= 10) {
-                Spacer(Modifier.height(8.dp))
-                Surface(
-                    color = MaterialTheme.colorScheme.errorContainer,
-                    shape = MaterialTheme.shapes.small,
-                ) {
-                    Text(
-                        text = "You dismiss most notifications from this app. Consider adding an auto-dismiss rule.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onErrorContainer,
-                        modifier = Modifier.padding(8.dp),
-                    )
-                }
+            // Auto-dismissed count
+            if (stat.autoDismissedCount > 0) {
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = "${stat.autoDismissedCount} auto-dismissed by rules",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.outline,
+                )
             }
         }
     }

@@ -54,6 +54,12 @@ object TimeUtils {
         }
     }
 
+    fun dateOffset(days: Int): String {
+        val cal = Calendar.getInstance()
+        cal.add(Calendar.DAY_OF_YEAR, days)
+        return dateFormat.format(cal.time)
+    }
+
     fun daysAgo(days: Int): Long {
         val cal = Calendar.getInstance()
         cal.add(Calendar.DAY_OF_YEAR, -days)

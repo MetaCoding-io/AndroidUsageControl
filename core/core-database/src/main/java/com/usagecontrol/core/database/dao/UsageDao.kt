@@ -40,6 +40,26 @@ interface UsageDao {
     """)
     suspend fun getTotalTimeForAppOnDate(packageName: String, date: String): Long?
 
+    // Top apps by average daily usage in the date range
+    @Query("""
+        SELECT packageName, appName, AVG(foregroundTimeMs) as avgDailyMs,
+            SUM(foregroundTimeMs) as totalMs, COUNT(*) as daysUsed
+        FROM usage_records
+        WHERE date >= :startDate
+        GROUP BY packageName
+        HAVING avgDailyMs > :minAvgMs
+        ORDER BY avgDailyMs DESC
+    """)
+    suspend fun getHeavyUsageApps(startDate: String, minAvgMs: Long): List<HeavyUsageRow>
+
     @Query("DELETE FROM usage_records WHERE date < :cutoffDate")
     suspend fun deleteOlderThan(cutoffDate: String): Int
 }
+
+data class HeavyUsageRow(
+    val packageName: String,
+    val appName: String,
+    val avgDailyMs: Long,
+    val totalMs: Long,
+    val daysUsed: Int,
+)

@@ -58,6 +58,18 @@ interface NotificationDao {
     @Query("SELECT COUNT(*) FROM notifications")
     suspend fun getCount(): Int
 
+    // Hour-of-day distribution of dismissed notifications per app
+    @Query("""
+        SELECT packageName, appName,
+            CAST(strftime('%H', timestamp / 1000, 'unixepoch', 'localtime') AS INTEGER) as hour,
+            COUNT(*) as count
+        FROM notifications
+        WHERE userAction = 'DISMISSED' AND timestamp >= :sinceTimestamp
+        GROUP BY packageName, hour
+        ORDER BY packageName, hour
+    """)
+    suspend fun getDismissalsByHour(sinceTimestamp: Long): List<HourlyDismissRow>
+
     // Stats queries for learning
     @Query("""
         SELECT packageName, appName,
@@ -77,6 +89,13 @@ interface NotificationDao {
 data class AppInfo(
     val packageName: String,
     val appName: String,
+)
+
+data class HourlyDismissRow(
+    val packageName: String,
+    val appName: String,
+    val hour: Int,
+    val count: Int,
 )
 
 data class DismissStatsRow(

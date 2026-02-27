@@ -52,6 +52,13 @@
             </intent-filter>
         </activity>
 
+        <!-- Screen Time Block Overlay -->
+        <activity
+            android:name="com.usagecontrol.feature.screentime.BlockOverlayActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:theme="@style/Theme.UsageControl" />
+
         <!-- Notification Listener Service -->
         <service
             android:name="com.usagecontrol.service.notification.NotificationCaptureService"

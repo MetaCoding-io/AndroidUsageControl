@@ -6,6 +6,7 @@ import com.usagecontrol.core.database.dao.ContextSnapshotDao
 import com.usagecontrol.core.database.dao.NotificationDao
 import com.usagecontrol.core.database.dao.RuleDao
 import com.usagecontrol.core.database.dao.SoundPresetDao
+import com.usagecontrol.core.database.dao.SuggestionDao
 import com.usagecontrol.core.database.dao.UsageDao
 import dagger.Module
 import dagger.Provides
@@ -26,7 +27,10 @@ object DatabaseModule {
             UsageControlDatabase::class.java,
             "usage_control.db"
         )
-            .addMigrations(UsageControlDatabase.MIGRATION_1_2)
+            .addMigrations(
+                UsageControlDatabase.MIGRATION_1_2,
+                UsageControlDatabase.MIGRATION_2_3,
+            )
             .build()
     }
 
@@ -44,4 +48,7 @@ object DatabaseModule {
 
     @Provides
     fun provideContextSnapshotDao(db: UsageControlDatabase): ContextSnapshotDao = db.contextSnapshotDao()
+
+    @Provides
+    fun provideSuggestionDao(db: UsageControlDatabase): SuggestionDao = db.suggestionDao()
 }
