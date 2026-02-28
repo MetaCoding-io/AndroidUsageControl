@@ -95,7 +95,7 @@ class SuggestionEngine @Inject constructor(
         return stats.filter { row ->
             row.totalNotifications >= MIN_NOTIFICATIONS &&
                 row.avgTimeToActionMs != null &&
-                row.avgTimeToActionMs < QUICK_DISMISS_MS &&
+                row.avgTimeToActionMs!! < QUICK_DISMISS_MS &&
                 row.dismissedCount > row.openedCount &&
                 row.packageName !in existingRulePackages
         }.mapNotNull { row ->
@@ -108,7 +108,7 @@ class SuggestionEngine @Inject constructor(
                 appPackageName = row.packageName,
                 appName = row.appName,
                 reason = "You dismiss ${row.appName} notifications in ${String.format("%.1f", avgSeconds)}s on average",
-                confidence = (1f - (row.avgTimeToActionMs.toFloat() / QUICK_DISMISS_MS)).coerceIn(0.5f, 0.95f),
+                confidence = (1f - (row.avgTimeToActionMs!!.toFloat() / QUICK_DISMISS_MS)).coerceIn(0.5f, 0.95f),
                 ruleTemplate = Rule(
                     name = "Auto-dismiss ${row.appName}",
                     pillar = RulePillar.NOTIFICATION,

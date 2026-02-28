@@ -253,10 +253,11 @@ private fun NotificationItem(
                 )
             }
 
-            if (notification.title != null) {
+            val title = notification.title
+            if (title != null) {
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    text = notification.title,
+                    text = title,
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold,
                     maxLines = if (expanded) Int.MAX_VALUE else 1,
@@ -264,10 +265,11 @@ private fun NotificationItem(
                 )
             }
 
-            if (notification.text != null) {
+            val text = notification.text
+            if (text != null) {
                 Spacer(Modifier.height(2.dp))
                 Text(
-                    text = notification.text,
+                    text = text,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = if (expanded) Int.MAX_VALUE else 2,

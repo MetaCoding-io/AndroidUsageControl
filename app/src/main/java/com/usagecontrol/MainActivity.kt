@@ -38,7 +38,7 @@ class MainActivity : ComponentActivity() {
         startMonitoringServices()
         setContent {
             UsageControlTheme {
-                UsageControlApp()
+                UsageControlAppContent()
             }
         }
     }
@@ -54,7 +54,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-private fun UsageControlApp() {
+private fun UsageControlAppContent() {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
