@@ -56,25 +56,25 @@ Requirements for milestone v0.2 — User Testing. Each maps to roadmap phases.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ONBD-01 | — | Pending |
-| ONBD-02 | — | Pending |
-| ONBD-03 | — | Pending |
-| ONBD-04 | — | Pending |
-| PERM-01 | — | Pending |
-| PERM-02 | — | Pending |
-| PERM-03 | — | Pending |
-| PERM-04 | — | Pending |
-| PERM-05 | — | Pending |
-| TOUR-01 | — | Pending |
-| TOUR-02 | — | Pending |
-| TOUR-03 | — | Pending |
-| TOUR-04 | — | Pending |
+| ONBD-01 | Phase 1 | Pending |
+| ONBD-02 | Phase 1 | Pending |
+| ONBD-03 | Phase 1 | Pending |
+| ONBD-04 | Phase 1 | Pending |
+| PERM-01 | Phase 2 | Pending |
+| PERM-02 | Phase 2 | Pending |
+| PERM-03 | Phase 2 | Pending |
+| PERM-04 | Phase 2 | Pending |
+| PERM-05 | Phase 2 | Pending |
+| TOUR-01 | Phase 3 | Pending |
+| TOUR-02 | Phase 3 | Pending |
+| TOUR-03 | Phase 3 | Pending |
+| TOUR-04 | Phase 3 | Pending |
 
 **Coverage:**
 - v0.2 requirements: 13 total
-- Mapped to phases: 0
-- Unmapped: 13
+- Mapped to phases: 13
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-28*
-*Last updated: 2026-02-28 after initial definition*
+*Last updated: 2026-02-28 — traceability mapped after roadmap creation*
