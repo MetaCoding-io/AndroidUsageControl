@@ -27,7 +27,9 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. A v0.1 user who already has all three permissions granted upgrades to v0.2 and is sent directly to the main app, never seeing the onboarding screens
   3. The app never shows the bottom navigation bar while any onboarding screen is active
   4. Pressing back from the first screen of the main app does not navigate back into any onboarding screen
-**Plans**: TBD
+**Plans**: 2 plans
+- [ ] 01-01-PLAN.md -- Infrastructure: DataStore dependency, PermissionChecker, OnboardingRepository, feature-onboarding module
+- [ ] 01-02-PLAN.md -- Routing: MainViewModel, NavHost restructure with nested graphs, OnboardingPlaceholderScreen
 
 ### Phase 2: Permission Walkthrough
 **Goal**: Users can successfully grant all three required permissions (Notification Access, Usage Access, DND Access) through a guided flow, or skip permissions at any step and still reach the main app with clear messaging about what is degraded
@@ -59,6 +61,6 @@ Phases execute in numeric order: 1 → 2 → 3
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 0/TBD | Not started | - |
+| 1. Foundation | 0/2 | Planned | - |
 | 2. Permission Walkthrough | 0/TBD | Not started | - |
 | 3. Welcome, Tour, and Quick Setup | 0/TBD | Not started | - |
