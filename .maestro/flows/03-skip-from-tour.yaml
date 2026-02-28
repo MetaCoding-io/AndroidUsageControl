@@ -1,0 +1,20 @@
+appId: com.usagecontrol
+name: "Skip from Feature Tour"
+---
+- clearState
+- launchApp
+
+- extendedWaitUntil:
+    visible:
+      id: "welcome_button_get_started"
+    timeout: 10000
+- tapOn:
+    id: "welcome_button_get_started"
+
+# Tour screen - skip
+- assertVisible: "Notification Tracking"
+- tapOn:
+    id: "tour_button_skip"
+
+# Verify main app
+- runFlow: ../helpers/assert-on-main-app.yaml

@@ -1,0 +1,41 @@
+appId: com.usagecontrol
+name: "Bottom Navigation - All Tabs"
+---
+- clearState
+- launchApp
+
+- extendedWaitUntil:
+    visible:
+      id: "welcome_button_skip"
+    timeout: 10000
+- tapOn:
+    id: "welcome_button_skip"
+
+# Default: Notifications
+- assertVisible:
+    id: "nav_tab_notifications"
+
+# Screen Time
+- tapOn:
+    id: "nav_tab_screentime"
+- assertVisible: "Screen Time"
+
+# Controls
+- tapOn:
+    id: "nav_tab_controls"
+- assertVisible: "Controls"
+
+# Insights
+- tapOn:
+    id: "nav_tab_insights"
+- assertVisible: "Insights"
+
+# Settings
+- tapOn:
+    id: "nav_tab_settings"
+- assertVisible: "Settings"
+
+# Back to Notifications
+- tapOn:
+    id: "nav_tab_notifications"
+- assertVisible: "Notifications"

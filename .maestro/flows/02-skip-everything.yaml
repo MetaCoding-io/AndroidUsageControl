@@ -1,0 +1,15 @@
+appId: com.usagecontrol
+name: "Skip Everything from Welcome"
+---
+- clearState
+- launchApp
+
+- extendedWaitUntil:
+    visible:
+      id: "welcome_button_skip"
+    timeout: 10000
+- tapOn:
+    id: "welcome_button_skip"
+
+# Verify main app
+- runFlow: ../helpers/assert-on-main-app.yaml

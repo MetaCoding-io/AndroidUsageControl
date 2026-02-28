@@ -1,0 +1,12 @@
+appId: com.usagecontrol
+---
+- assertVisible: "Set up permissions"
+- assertVisible: "1 / 3"
+- tapOn:
+    id: "permission_button_skip"
+- assertVisible: "2 / 3"
+- tapOn:
+    id: "permission_button_skip"
+- assertVisible: "3 / 3"
+- tapOn:
+    id: "permission_button_skip"

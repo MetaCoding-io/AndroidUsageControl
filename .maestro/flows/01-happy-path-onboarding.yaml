@@ -1,0 +1,27 @@
+appId: com.usagecontrol
+name: "Happy Path - Full Onboarding"
+---
+- clearState
+- launchApp
+
+# Welcome screen
+- extendedWaitUntil:
+    visible:
+      id: "welcome_button_get_started"
+    timeout: 10000
+- tapOn:
+    id: "welcome_button_get_started"
+
+# Feature Tour - all 5 slides
+- runFlow: ../helpers/complete-tour.yaml
+
+# Permission Walkthrough - skip all
+- runFlow: ../helpers/skip-all-permissions.yaml
+
+# Quick Setup - enable Night Mode
+- assertVisible: "Quick Setup"
+- tapOn:
+    id: "quicksetup_button_enable"
+
+# Verify main app
+- runFlow: ../helpers/assert-on-main-app.yaml

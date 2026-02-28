@@ -1,0 +1,32 @@
+appId: com.usagecontrol
+name: "Returning User - Skip Onboarding"
+---
+# First run: complete onboarding to set DataStore flag
+- clearState
+- launchApp
+
+- extendedWaitUntil:
+    visible:
+      id: "welcome_button_get_started"
+    timeout: 10000
+- tapOn:
+    id: "welcome_button_get_started"
+
+- runFlow: ../helpers/complete-tour.yaml
+- runFlow: ../helpers/skip-all-permissions.yaml
+
+- assertVisible: "Quick Setup"
+- tapOn:
+    id: "quicksetup_button_skip"
+
+- runFlow: ../helpers/assert-on-main-app.yaml
+
+# Stop and relaunch - should go straight to main
+- stopApp
+- launchApp
+
+- extendedWaitUntil:
+    visible:
+      id: "nav_tab_notifications"
+    timeout: 10000
+- runFlow: ../helpers/assert-on-main-app.yaml

@@ -1,0 +1,17 @@
+appId: com.usagecontrol
+---
+- assertVisible: "Notification Tracking"
+- tapOn:
+    id: "tour_button_next"
+- assertVisible: "Screen Time"
+- tapOn:
+    id: "tour_button_next"
+- assertVisible: "Smart Controls"
+- tapOn:
+    id: "tour_button_next"
+- assertVisible: "Insights"
+- tapOn:
+    id: "tour_button_next"
+- assertVisible: "Rules Engine"
+- tapOn:
+    id: "tour_button_next"

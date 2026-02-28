@@ -1,0 +1,12 @@
+appId: com.usagecontrol
+---
+- assertVisible:
+    id: "nav_tab_notifications"
+- assertVisible:
+    id: "nav_tab_screentime"
+- assertVisible:
+    id: "nav_tab_controls"
+- assertVisible:
+    id: "nav_tab_insights"
+- assertVisible:
+    id: "nav_tab_settings"

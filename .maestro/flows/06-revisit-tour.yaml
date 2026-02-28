@@ -1,0 +1,42 @@
+appId: com.usagecontrol
+name: "Revisit Tour from Settings"
+---
+# Complete onboarding first
+- clearState
+- launchApp
+
+- extendedWaitUntil:
+    visible:
+      id: "welcome_button_get_started"
+    timeout: 10000
+- tapOn:
+    id: "welcome_button_get_started"
+
+- runFlow: ../helpers/complete-tour.yaml
+- runFlow: ../helpers/skip-all-permissions.yaml
+
+- assertVisible: "Quick Setup"
+- tapOn:
+    id: "quicksetup_button_skip"
+
+# Navigate to Settings tab
+- tapOn:
+    id: "nav_tab_settings"
+
+# Tap Revisit tour
+- scrollUntilVisible:
+    element:
+      id: "settings_item_revisit_tour"
+    direction: DOWN
+- tapOn:
+    id: "settings_item_revisit_tour"
+
+# Verify tour screen appears
+- assertVisible: "Notification Tracking"
+
+# Skip to go back
+- tapOn:
+    id: "tour_button_skip"
+
+# Verify back on main app
+- runFlow: ../helpers/assert-on-main-app.yaml
