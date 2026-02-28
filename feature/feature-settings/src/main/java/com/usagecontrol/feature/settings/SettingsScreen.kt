@@ -148,6 +148,20 @@ fun SettingsScreen(
                 subtitle = "v1.0.0 - All data stored locally on device",
                 onClick = {},
             )
+
+            SettingsItem(
+                icon = Icons.Default.Business,
+                title = "Developed by",
+                subtitle = "Metacoding Solutions LLC",
+                onClick = {},
+            )
+
+            SettingsItem(
+                icon = Icons.Default.Copyright,
+                title = "Copyright",
+                subtitle = "\u00a9 2026 Metacoding Solutions LLC. All rights reserved.",
+                onClick = {},
+            )
         }
     }
 

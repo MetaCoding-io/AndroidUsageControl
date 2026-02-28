@@ -18,6 +18,9 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
+
+        resValue("string", "app_developer", "Metacoding Solutions LLC")
+        resValue("string", "app_copyright", "\u00a9 2026 Metacoding Solutions LLC")
     }
 
     buildTypes {
