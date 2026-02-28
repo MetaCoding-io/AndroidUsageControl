@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v0.2
 milestone_name: milestone
-status: unknown
-last_updated: "2026-02-28T19:53:28.053Z"
+status: checkpoint
+last_updated: "2026-02-28T20:17:39Z"
 progress:
   total_phases: 1
   completed_phases: 0
   total_plans: 2
-  completed_plans: 1
+  completed_plans: 2
 ---
 
 # Project State
@@ -23,27 +23,27 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 ## Current Position
 
 Phase: 1 of 3 (Foundation)
-Plan: 1 of TBD in current phase
-Status: In progress
-Last activity: 2026-02-28 — Completed Plan 01-01 (Gradle infrastructure + onboarding data layer)
+Plan: 2 of TBD in current phase
+Status: Checkpoint (human-verify)
+Last activity: 2026-02-28 — Completed Plan 01-02 Tasks 1-2 (MainViewModel routing + OnboardingPlaceholderScreen + restructured MainActivity); paused at Task 3 human-verify checkpoint
 
-Progress: [█░░░░░░░░░] 10%
+Progress: [██░░░░░░░░] 20%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1
-- Average duration: 2 min
-- Total execution time: 2 min
+- Total plans completed: 2
+- Average duration: 2.5 min
+- Total execution time: 5 min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01-foundation | 1 | 2 min | 2 min |
+| 01-foundation | 2 | 5 min | 2.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (2 min)
+- Last 5 plans: 01-01 (2 min), 01-02 (3 min)
 - Trend: —
 
 *Updated after each plan completion*
@@ -61,6 +61,8 @@ Recent decisions affecting current work:
 - 01-01: DataStore provided as @Singleton from app module via DataStoreModule; preferencesDataStore delegate called exactly once — prevents multiple-instance corruption
 - 01-01: AppOpsManager.unsafeCheckOpNoThrow used for usage access (minSdk 29+ guarantees availability)
 - 01-01: feature-onboarding module starts empty; Plan 02 adds screens to keep Plan 01 focused on infrastructure
+- 01-02: Splash routing pattern implemented: startDestination null until DataStore coroutine resolves, empty Box prevents NavHost flicker
+- 01-02: Nested navigation graphs (onboarding/main) — popUpTo("onboarding") { inclusive = true } ensures clean back stack on skip/complete
 
 ### Pending Todos
 
@@ -75,5 +77,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: Plan 01-01 complete — Gradle infrastructure, PermissionChecker, OnboardingRepository, DataStoreModule, feature-onboarding module all done. Ready for Plan 01-02.
+Stopped at: Plan 01-02 Task 3 checkpoint (human-verify) — routing spine built, pending device verification of 4 success criteria. Run `./gradlew :app:installDebug` then test fresh install, skip flow, return-user skip, and v0.1 upgrader.
 Resume file: None
