@@ -25,7 +25,9 @@ import com.usagecontrol.core.ui.theme.UsageControlTheme
 import com.usagecontrol.feature.learning.LearningScreen
 import com.usagecontrol.feature.lockcontrol.LockControlScreen
 import com.usagecontrol.feature.notifications.NotificationsScreen
+import com.usagecontrol.feature.onboarding.FeatureTourScreen
 import com.usagecontrol.feature.onboarding.PermissionWalkthroughScreen
+import com.usagecontrol.feature.onboarding.WelcomeScreen
 import com.usagecontrol.feature.rules.RuleEditorScreen
 import com.usagecontrol.feature.rules.RuleListScreen
 import com.usagecontrol.feature.screentime.ScreenTimeScreen
@@ -109,8 +111,28 @@ fun UsageControlAppContent(
                 .padding(innerPadding),
         ) {
             // Onboarding nested graph -- removed from back stack on completion/skip
-            navigation(startDestination = "onboarding/start", route = "onboarding") {
-                composable("onboarding/start") {
+            navigation(startDestination = "onboarding/welcome", route = "onboarding") {
+                composable("onboarding/welcome") {
+                    WelcomeScreen(
+                        onGetStarted = { navController.navigate("onboarding/tour") },
+                        onSkip = {
+                            navController.navigate("main") {
+                                popUpTo("onboarding") { inclusive = true }
+                            }
+                        },
+                    )
+                }
+                composable("onboarding/tour") {
+                    FeatureTourScreen(
+                        onNext = { navController.navigate("onboarding/permissions") },
+                        onSkip = {
+                            navController.navigate("main") {
+                                popUpTo("onboarding") { inclusive = true }
+                            }
+                        },
+                    )
+                }
+                composable("onboarding/permissions") {
                     PermissionWalkthroughScreen(
                         onComplete = {
                             navController.navigate("main") {

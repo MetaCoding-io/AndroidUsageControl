@@ -1,5 +1,6 @@
 package com.usagecontrol.feature.onboarding
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
@@ -52,6 +53,7 @@ private val tourSlides = listOf(
     ),
 )
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun FeatureTourScreen(
     onNext: () -> Unit,
