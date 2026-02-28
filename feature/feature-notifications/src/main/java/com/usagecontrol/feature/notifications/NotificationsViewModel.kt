@@ -2,6 +2,7 @@ package com.usagecontrol.feature.notifications
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.usagecontrol.core.common.PermissionChecker
 import com.usagecontrol.core.common.TimeUtils
 import com.usagecontrol.core.database.dao.ActionBreakdownRow
 import com.usagecontrol.core.database.dao.DailyNotifStatsRow
@@ -19,7 +20,15 @@ import javax.inject.Inject
 class NotificationsViewModel @Inject constructor(
     private val notificationDao: NotificationDao,
     private val ruleDao: RuleDao,
+    private val permissionChecker: PermissionChecker,
 ) : ViewModel() {
+
+    private val _showPermissionBanner = MutableStateFlow(!permissionChecker.isNotificationAccessGranted())
+    val showPermissionBanner: StateFlow<Boolean> = _showPermissionBanner
+
+    fun recheckPermission() {
+        _showPermissionBanner.value = !permissionChecker.isNotificationAccessGranted()
+    }
 
     private val _selectedApp = MutableStateFlow<String?>(null)
     val selectedApp: StateFlow<String?> = _selectedApp

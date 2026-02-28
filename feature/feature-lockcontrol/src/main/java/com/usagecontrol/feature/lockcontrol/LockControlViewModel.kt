@@ -2,6 +2,7 @@ package com.usagecontrol.feature.lockcontrol
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.usagecontrol.core.common.PermissionChecker
 import com.usagecontrol.core.database.dao.ContextSnapshotDao
 import com.usagecontrol.core.database.dao.SoundPresetDao
 import com.usagecontrol.core.database.toEntity
@@ -23,7 +24,15 @@ import javax.inject.Inject
 class LockControlViewModel @Inject constructor(
     private val soundPresetDao: SoundPresetDao,
     private val contextSnapshotDao: ContextSnapshotDao,
+    private val permissionChecker: PermissionChecker,
 ) : ViewModel() {
+
+    private val _showPermissionBanner = MutableStateFlow(!permissionChecker.isDndAccessGranted())
+    val showPermissionBanner: StateFlow<Boolean> = _showPermissionBanner
+
+    fun recheckPermission() {
+        _showPermissionBanner.value = !permissionChecker.isDndAccessGranted()
+    }
 
     val presets = soundPresetDao.getAllFlow()
         .map { list -> list.map { it.toModel() } }

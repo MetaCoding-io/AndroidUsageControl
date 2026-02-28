@@ -2,6 +2,7 @@ package com.usagecontrol.feature.screentime
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.usagecontrol.core.common.PermissionChecker
 import com.usagecontrol.core.common.TimeUtils
 import com.usagecontrol.core.database.dao.DailyUsageTotalRow
 import com.usagecontrol.core.database.dao.RuleDao
@@ -18,7 +19,15 @@ import javax.inject.Inject
 class ScreenTimeViewModel @Inject constructor(
     private val usageDao: UsageDao,
     private val ruleDao: RuleDao,
+    private val permissionChecker: PermissionChecker,
 ) : ViewModel() {
+
+    private val _showPermissionBanner = MutableStateFlow(!permissionChecker.isUsageAccessGranted())
+    val showPermissionBanner: StateFlow<Boolean> = _showPermissionBanner
+
+    fun recheckPermission() {
+        _showPermissionBanner.value = !permissionChecker.isUsageAccessGranted()
+    }
 
     private val _selectedDate = MutableStateFlow(TimeUtils.todayDate())
     val selectedDate: StateFlow<String> = _selectedDate

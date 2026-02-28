@@ -10,13 +10,17 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.usagecontrol.core.common.TimeUtils
 import com.usagecontrol.core.database.dao.DailyUsageTotalRow
 import com.usagecontrol.core.model.UsageRecord
+import com.usagecontrol.core.ui.component.DegradedPermissionBanner
 import com.usagecontrol.core.ui.component.EmptyState
 import com.usagecontrol.core.ui.component.SimpleBarChart
 import com.usagecontrol.core.ui.component.SimpleLineChart
@@ -35,6 +39,18 @@ fun ScreenTimeScreen(
     val rules by viewModel.rules.collectAsStateWithLifecycle()
     val dailyTotals by viewModel.dailyTotals.collectAsStateWithLifecycle()
     val trendDays by viewModel.trendDays.collectAsStateWithLifecycle()
+    val showPermissionBanner by viewModel.showPermissionBanner.collectAsStateWithLifecycle()
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.recheckPermission()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
 
     var showLimitDialog by remember { mutableStateOf<UsageRecord?>(null) }
 
@@ -49,6 +65,12 @@ fun ScreenTimeScreen(
                 }
             }
         )
+
+        if (showPermissionBanner) {
+            DegradedPermissionBanner(
+                message = "Usage access is not granted. Screen time data and limits won't work until you enable it in Settings.",
+            )
+        }
 
         LazyColumn(
             modifier = Modifier.fillMaxSize(),

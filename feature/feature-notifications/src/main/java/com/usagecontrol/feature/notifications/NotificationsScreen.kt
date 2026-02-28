@@ -12,14 +12,18 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.usagecontrol.core.common.TimeUtils
 import com.usagecontrol.core.model.NotificationAction
 import com.usagecontrol.core.model.NotificationRecord
+import com.usagecontrol.core.ui.component.DegradedPermissionBanner
 import com.usagecontrol.core.ui.component.DonutChart
 import com.usagecontrol.core.ui.component.EmptyState
 import com.usagecontrol.core.ui.component.SimpleLineChart
@@ -38,6 +42,18 @@ fun NotificationsScreen(
     val dailyStats by viewModel.dailyStats.collectAsStateWithLifecycle()
     val actionBreakdown by viewModel.actionBreakdown.collectAsStateWithLifecycle()
     val dashboardDays by viewModel.dashboardDays.collectAsStateWithLifecycle()
+    val showPermissionBanner by viewModel.showPermissionBanner.collectAsStateWithLifecycle()
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.recheckPermission()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
 
     var showDashboard by remember { mutableStateOf(true) }
 
@@ -60,6 +76,12 @@ fun NotificationsScreen(
                 }
             }
         )
+
+        if (showPermissionBanner) {
+            DegradedPermissionBanner(
+                message = "Notification access is not granted. Notification tracking and rules won't work until you enable it in Settings.",
+            )
+        }
 
         // App filter chips
         if (apps.isNotEmpty()) {

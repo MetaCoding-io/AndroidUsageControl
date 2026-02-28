@@ -9,14 +9,18 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.usagecontrol.core.model.ContextSnapshot
 import com.usagecontrol.core.model.PresetTrigger
 import com.usagecontrol.core.model.RingerMode
 import com.usagecontrol.core.model.SoundPreset
+import com.usagecontrol.core.ui.component.DegradedPermissionBanner
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -26,6 +30,19 @@ fun LockControlScreen(
 ) {
     val presets by viewModel.presets.collectAsStateWithLifecycle()
     val currentContext by viewModel.currentContext.collectAsStateWithLifecycle()
+    val showPermissionBanner by viewModel.showPermissionBanner.collectAsStateWithLifecycle()
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.recheckPermission()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
     var showAddDialog by remember { mutableStateOf(false) }
     var showCustomDialog by remember { mutableStateOf(false) }
 
@@ -43,6 +60,12 @@ fun LockControlScreen(
                 }
             }
         )
+
+        if (showPermissionBanner) {
+            DegradedPermissionBanner(
+                message = "Do Not Disturb access is not granted. Sound presets and rules won't work until you enable it in Settings.",
+            )
+        }
 
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
