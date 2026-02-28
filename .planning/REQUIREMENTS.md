@@ -16,10 +16,10 @@ Requirements for milestone v0.2 — User Testing. Each maps to roadmap phases.
 
 ### Permission Walkthrough
 
-- [ ] **PERM-01**: User sees a custom priming screen per permission explaining why it's needed before being sent to Settings
-- [ ] **PERM-02**: App opens the correct system Settings screen for each permission (Notification Access, Usage Access, DND)
-- [ ] **PERM-03**: App detects permission grant when user returns from Settings and shows green checkmark
-- [ ] **PERM-04**: User sees step progress (1/3, 2/3, 3/3) during permission walkthrough
+- [x] **PERM-01**: User sees a custom priming screen per permission explaining why it's needed before being sent to Settings
+- [x] **PERM-02**: App opens the correct system Settings screen for each permission (Notification Access, Usage Access, DND)
+- [x] **PERM-03**: App detects permission grant when user returns from Settings and shows green checkmark
+- [x] **PERM-04**: User sees step progress (1/3, 2/3, 3/3) during permission walkthrough
 - [ ] **PERM-05**: App works in degraded mode if user skips permissions, with clear messaging about what's missing
 
 ### Welcome & Tour
@@ -60,10 +60,10 @@ Requirements for milestone v0.2 — User Testing. Each maps to roadmap phases.
 | ONBD-02 | Phase 1 | Complete |
 | ONBD-03 | Phase 1 | Complete |
 | ONBD-04 | Phase 1 | Complete |
-| PERM-01 | Phase 2 | Pending |
-| PERM-02 | Phase 2 | Pending |
-| PERM-03 | Phase 2 | Pending |
-| PERM-04 | Phase 2 | Pending |
+| PERM-01 | Phase 2 | Complete |
+| PERM-02 | Phase 2 | Complete |
+| PERM-03 | Phase 2 | Complete |
+| PERM-04 | Phase 2 | Complete |
 | PERM-05 | Phase 2 | Pending |
 | TOUR-01 | Phase 3 | Pending |
 | TOUR-02 | Phase 3 | Pending |

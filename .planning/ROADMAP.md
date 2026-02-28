@@ -41,7 +41,9 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. The user can see a step counter (e.g., 1/3, 2/3, 3/3) at all times during the permission walkthrough
   4. A user who skips all three permissions still reaches the main app and sees clear per-feature messaging about what is unavailable
   5. The app opens the correct system Settings screen for each permission (not a generic Settings page)
-**Plans**: TBD
+**Plans**: 2 plans
+- [ ] 02-01-PLAN.md -- Walkthrough: PermissionStep enum, PermissionWalkthroughViewModel, PermissionWalkthroughScreen, NavGraph wiring (PERM-01, PERM-02, PERM-03, PERM-04)
+- [ ] 02-02-PLAN.md -- Degraded mode: DegradedPermissionBanner in core-ui, banner integration in Notifications/ScreenTime/Controls screens (PERM-05)
 
 ### Phase 3: Welcome, Tour, and Quick Setup
 **Goal**: Users experience a complete end-to-end onboarding flow — welcome proposition, feature tour, and one-tap preset activation — and can re-access the tour from Settings after onboarding completes
@@ -62,5 +64,5 @@ Phases execute in numeric order: 1 → 2 → 3
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 2/2 | Complete   | 2026-02-28 |
-| 2. Permission Walkthrough | 0/TBD | Not started | - |
+| 2. Permission Walkthrough | 1/2 | In Progress|  |
 | 3. Welcome, Tour, and Quick Setup | 0/TBD | Not started | - |
