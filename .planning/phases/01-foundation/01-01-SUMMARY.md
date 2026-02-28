@@ -83,7 +83,7 @@ Each task was committed atomically:
 1. **Task 1: Add DataStore dependency and wire Gradle modules** - `440fb3b` (chore)
 2. **Task 2: Create PermissionChecker, OnboardingDataStore, OnboardingRepository, DataStoreModule** - `5c23359` (feat)
 
-**Plan metadata:** TBD (docs commit)
+**Plan metadata:** `8abcd8a` (docs: complete plan)
 
 ## Files Created/Modified
 
