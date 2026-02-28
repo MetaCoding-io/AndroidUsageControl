@@ -33,7 +33,7 @@ decisions:
 metrics:
   duration: 2 min
   completed_date: "2026-02-28"
-  tasks_completed: 2
+  tasks_completed: 3
   tasks_total: 3
   files_created: 2
   files_modified: 3
@@ -54,7 +54,7 @@ QuickSetupViewModel and QuickSetupScreen added as the final onboarding step afte
 |------|------|--------|-------|
 | 1 | QuickSetupViewModel and QuickSetupScreen | bd103d1 | build.gradle.kts, QuickSetupViewModel.kt, QuickSetupScreen.kt |
 | 2 | Wire routes, Settings revisit tour, delete placeholder | fe9065b | MainActivity.kt, SettingsScreen.kt, OnboardingPlaceholderScreen.kt (deleted) |
-| 3 | Human verification on device | (pending) | - |
+| 3 | Human verification on device | (approved) | Device verification passed |
 
 ## Navigation Route Chain
 
