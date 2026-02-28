@@ -57,7 +57,7 @@ completed: 2026-02-28
 - **Duration:** 3 min
 - **Started:** 2026-02-28T20:14:56Z
 - **Completed:** 2026-02-28T20:17:39Z
-- **Tasks:** 2 of 3 (Task 3 is human verification checkpoint)
+- **Tasks:** 3 of 3 (including human-verify checkpoint, approved)
 - **Files modified:** 3
 
 ## Accomplishments
@@ -80,7 +80,7 @@ Each task was committed atomically:
 1. **Task 1: Create MainViewModel and OnboardingPlaceholderScreen** - `7cbe9f2` (feat)
 2. **Task 2: Restructure MainActivity with nested nav graphs and dynamic startDestination** - `1f3b31b` (feat)
 
-**Task 3 (human-verify checkpoint):** Pending device/emulator verification
+3. **Task 3: Verify onboarding routing on device** - human-verify checkpoint, **approved** by user
 
 ## Files Created/Modified
 
@@ -104,14 +104,16 @@ None.
 
 ## User Setup Required
 
-Task 3 requires device or emulator verification — see checkpoint message for test steps.
+None - no external service configuration required.
 
 ## Next Phase Readiness
 
-- Routing spine is complete; Plan 03 (if any) can add real onboarding screens and replace OnboardingPlaceholderScreen
-- All four ONBD requirements (ONBD-01 through ONBD-04) have code implementation; ONBD-01/02/03/04 verified structurally, pending device test at checkpoint
-- Back stack integrity and bottom bar hiding are guaranteed by navigation graph structure, not runtime checks
+- Routing spine is complete and device-verified; Phase 2 can replace OnboardingPlaceholderScreen with real permission walkthrough screens without touching MainViewModel or MainActivity navigation logic
+- Phase 3 can prepend welcome/tour screens by adding composable routes to the onboarding nested graph
+- All four ONBD requirements (ONBD-01 through ONBD-04) fully verified on device: fresh install shows onboarding, skip navigates to main with clean back stack, second launch goes directly to main app
+- Remaining concern: verify no v0.1 build wrote onboarding_complete=false to DataStore (would prevent upgrader auto-skip) — low probability, validate during Phase 2 device testing
+- NLS rebind bug (AOSP #226411020) must still be verified on physical device after Notification Access grant in Phase 2
 
 ---
 *Phase: 01-foundation*
-*Completed: 2026-02-28 (partial — checkpoint pending)*
+*Completed: 2026-02-28*
