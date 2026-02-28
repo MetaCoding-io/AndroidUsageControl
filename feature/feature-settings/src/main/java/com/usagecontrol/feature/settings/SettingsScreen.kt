@@ -145,7 +145,7 @@ fun SettingsScreen(
             SettingsItem(
                 icon = Icons.Default.Info,
                 title = "Usage Control",
-                subtitle = "v1.0.0 - All data stored locally on device",
+                subtitle = "v0.1.0 - All data stored locally on device",
                 onClick = {},
             )
 
