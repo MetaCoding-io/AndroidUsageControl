@@ -58,11 +58,15 @@ dependencies {
     implementation(project(":feature:feature-lockcontrol"))
     implementation(project(":feature:feature-rules"))
     implementation(project(":feature:feature-settings"))
+    implementation(project(":feature:feature-onboarding"))
 
     // Service modules
     implementation(project(":service:service-notification"))
     implementation(project(":service:service-usage"))
     implementation(project(":service:service-context"))
+
+    // DataStore
+    implementation(libs.datastore.preferences)
 
     // AndroidX
     implementation(libs.androidx.core.ktx)

@@ -4,6 +4,7 @@ kotlin = "1.9.22"
 ksp = "1.9.22-1.0.17"
 hilt = "2.50"
 hiltNavigationCompose = "1.1.0"
+datastore = "1.1.1"
 room = "2.6.1"
 coroutines = "1.7.3"
 lifecycle = "2.7.0"
@@ -44,6 +45,9 @@ hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hil
 hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
 hilt-work = { module = "androidx.hilt:hilt-work", version.ref = "hiltNavigationCompose" }
 hilt-work-compiler = { module = "androidx.hilt:hilt-compiler", version.ref = "hiltNavigationCompose" }
+
+# DataStore
+datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
 
 # Room
 room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }

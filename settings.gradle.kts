@@ -34,6 +34,7 @@ include(":feature:feature-screentime")
 include(":feature:feature-lockcontrol")
 include(":feature:feature-rules")
 include(":feature:feature-settings")
+include(":feature:feature-onboarding")
 
 // Service modules
 include(":service:service-notification")
