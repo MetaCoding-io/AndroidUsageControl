@@ -24,8 +24,8 @@ Requirements for milestone v0.2 — User Testing. Each maps to roadmap phases.
 
 ### Welcome & Tour
 
-- [ ] **TOUR-01**: User sees welcome screen with app value proposition as the first onboarding step
-- [ ] **TOUR-02**: User can swipe through a 5-tab feature tour with HorizontalPager and dot indicators
+- [x] **TOUR-01**: User sees welcome screen with app value proposition as the first onboarding step
+- [x] **TOUR-02**: User can swipe through a 5-tab feature tour with HorizontalPager and dot indicators
 - [ ] **TOUR-03**: User is offered a quick setup wizard to enable Night Mode preset at end of onboarding
 - [ ] **TOUR-04**: User can revisit the feature tour from the Settings tab
 
@@ -65,8 +65,8 @@ Requirements for milestone v0.2 — User Testing. Each maps to roadmap phases.
 | PERM-03 | Phase 2 | Complete |
 | PERM-04 | Phase 2 | Complete |
 | PERM-05 | Phase 2 | Complete |
-| TOUR-01 | Phase 3 | Pending |
-| TOUR-02 | Phase 3 | Pending |
+| TOUR-01 | Phase 3 | Complete |
+| TOUR-02 | Phase 3 | Complete |
 | TOUR-03 | Phase 3 | Pending |
 | TOUR-04 | Phase 3 | Pending |
 

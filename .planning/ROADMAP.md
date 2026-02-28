@@ -54,7 +54,9 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. A user can swipe through a 5-slide feature tour with dot page indicators and a visible skip option on every slide
   3. At the end of onboarding the user is offered a one-tap option to enable Night Mode preset, which activates immediately without navigating to the Rules tab
   4. A returning user can open Settings, tap a "Revisit tour" option, and view the feature tour again without triggering the full onboarding flow
-**Plans**: TBD
+**Plans**: 2 plans
+- [ ] 03-01-PLAN.md -- Welcome + Tour: WelcomeScreen, FeatureTourScreen (HorizontalPager, 5 slides, dot indicators), onboarding nav graph expansion (TOUR-01, TOUR-02)
+- [ ] 03-02-PLAN.md -- Quick Setup + Revisit: QuickSetupViewModel, QuickSetupScreen (Night Mode preset), standalone tour route, Settings "Revisit tour" item, placeholder cleanup (TOUR-03, TOUR-04)
 
 ## Progress
 
@@ -65,4 +67,4 @@ Phases execute in numeric order: 1 → 2 → 3
 |-------|----------------|--------|-----------|
 | 1. Foundation | 2/2 | Complete   | 2026-02-28 |
 | 2. Permission Walkthrough | 2/2 | Complete   | 2026-02-28 |
-| 3. Welcome, Tour, and Quick Setup | 0/TBD | Not started | - |
+| 3. Welcome, Tour, and Quick Setup | 1/2 | In Progress|  |

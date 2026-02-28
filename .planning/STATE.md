@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v0.2
 milestone_name: milestone
 status: unknown
-last_updated: "2026-02-28T20:34:08.220Z"
+last_updated: "2026-02-28T20:49:16Z"
 progress:
-  total_phases: 2
+  total_phases: 3
   completed_phases: 2
-  total_plans: 4
-  completed_plans: 4
+  total_plans: 6
+  completed_plans: 5
 ---
 
 # Project State
@@ -18,23 +18,23 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-28)
 
 **Core value:** Help users become aware of and take control of their phone usage patterns without sacrificing privacy
-**Current focus:** Phase 2 — Permission Walkthrough
+**Current focus:** Phase 3 — Welcome, Tour, and Quick Setup
 
 ## Current Position
 
-Phase: 2 of 3 (Permission Walkthrough)
-Plan: 2 of 2 in current phase (Phase 2 complete — human verification approved)
-Status: Active — Phase 2 complete; ready to begin Phase 3
-Last activity: 2026-02-28 — Completed Plan 02-02 (human verification approved: degraded-mode banners verified on device; Phase 2 Permission Walkthrough fully complete)
+Phase: 3 of 3 (Welcome, Tour, and Quick Setup)
+Plan: 1 of 2 in current phase (Plan 03-01 complete)
+Status: Active — Plan 03-01 complete; ready to execute Plan 03-02
+Last activity: 2026-02-28 — Executed Plan 03-01: WelcomeScreen + FeatureTourScreen + expanded onboarding nav graph
 
-Progress: [███████░░░] 70%
+Progress: [████████░░] 83%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 3
-- Average duration: 2.7 min
-- Total execution time: 8 min
+- Total plans completed: 5
+- Average duration: 2.6 min
+- Total execution time: 10 min
 
 **By Phase:**
 
@@ -42,9 +42,10 @@ Progress: [███████░░░] 70%
 |-------|-------|-------|----------|
 | 01-foundation | 2 | 5 min | 2.5 min |
 | 02-permission-walkthrough | 2 | 7 min | 3.5 min |
+| 03-welcome-tour-and-quick-setup | 1 (of 2) | 2 min | 2 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (2 min), 01-02 (3 min), 02-01 (3 min), 02-02 (4 min)
+- Last 5 plans: 01-01 (2 min), 01-02 (3 min), 02-01 (3 min), 02-02 (4 min), 03-01 (2 min)
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -71,6 +72,9 @@ Recent decisions affecting current work:
 - 02-02: DegradedPermissionBanner accepts only message: String — feature-specific text stays in feature modules (anti-pattern avoidance)
 - 02-02: No dismiss button on banner — persists while permission missing (hiding it hides a real problem)
 - 02-02: recheckPermission() is synchronous — PermissionChecker methods are system API calls with negligible latency
+- 03-01: @OptIn(ExperimentalFoundationApi::class) required for HorizontalPager at BOM 2024.02.00 (Compose 1.6.x)
+- 03-01: onboarding/start route replaced by onboarding/welcome, onboarding/tour, onboarding/permissions
+- 03-01: Static onboarding slides use private data class + top-level val — no ViewModel needed for presentation-only data
 
 ### Pending Todos
 
@@ -85,5 +89,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: Phase 2 complete — Plan 02-02 human verification approved. All Phase 2 requirements met (PERM-01 through PERM-05). Ready for Phase 3 (Welcome, Tour, and Quick Setup).
+Stopped at: Plan 03-01 complete — WelcomeScreen + FeatureTourScreen created; onboarding nav graph expanded to welcome -> tour -> permissions. TOUR-01 and TOUR-02 requirements met. Ready for Plan 03-02.
 Resume file: None
