@@ -25,7 +25,7 @@ import com.usagecontrol.core.ui.theme.UsageControlTheme
 import com.usagecontrol.feature.learning.LearningScreen
 import com.usagecontrol.feature.lockcontrol.LockControlScreen
 import com.usagecontrol.feature.notifications.NotificationsScreen
-import com.usagecontrol.feature.onboarding.OnboardingPlaceholderScreen
+import com.usagecontrol.feature.onboarding.PermissionWalkthroughScreen
 import com.usagecontrol.feature.rules.RuleEditorScreen
 import com.usagecontrol.feature.rules.RuleListScreen
 import com.usagecontrol.feature.screentime.ScreenTimeScreen
@@ -111,9 +111,8 @@ fun UsageControlAppContent(
             // Onboarding nested graph -- removed from back stack on completion/skip
             navigation(startDestination = "onboarding/start", route = "onboarding") {
                 composable("onboarding/start") {
-                    OnboardingPlaceholderScreen(
+                    PermissionWalkthroughScreen(
                         onComplete = {
-                            viewModel.markOnboardingComplete()
                             navController.navigate("main") {
                                 popUpTo("onboarding") { inclusive = true }
                             }
