@@ -18,6 +18,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -70,7 +71,7 @@ fun FeatureTourScreen(
         ) {
             HorizontalPager(
                 state = pagerState,
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize().testTag("tour_pager"),
             ) { page ->
                 val slide = tourSlides[page]
                 Column(
@@ -111,7 +112,8 @@ fun FeatureTourScreen(
                 onClick = onSkip,
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(8.dp),
+                    .padding(8.dp)
+                    .testTag("tour_button_skip"),
             ) {
                 Text("Skip")
             }
@@ -157,7 +159,8 @@ fun FeatureTourScreen(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 16.dp),
+                    .padding(horizontal = 24.dp, vertical = 16.dp)
+                    .testTag("tour_button_next"),
             ) {
                 Text(if (isLastPage) "Continue" else "Next")
             }

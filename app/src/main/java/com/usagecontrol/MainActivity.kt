@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -86,6 +87,7 @@ fun UsageControlAppContent(
                 NavigationBar {
                     AppScreen.entries.forEach { screen ->
                         NavigationBarItem(
+                            modifier = Modifier.testTag("nav_tab_${screen.route}"),
                             selected = currentRoute == screen.route,
                             onClick = {
                                 navController.navigate(screen.route) {

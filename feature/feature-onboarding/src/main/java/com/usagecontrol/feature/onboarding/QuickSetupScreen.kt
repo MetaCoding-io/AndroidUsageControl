@@ -7,6 +7,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -87,7 +88,8 @@ fun QuickSetupScreen(
                 onClick = { viewModel.createNightPreset { onComplete() } },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp),
+                    .padding(horizontal = 24.dp)
+                    .testTag("quicksetup_button_enable"),
             ) {
                 Text("Enable Night Mode")
             }
@@ -98,7 +100,8 @@ fun QuickSetupScreen(
                 onClick = onComplete,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp),
+                    .padding(horizontal = 24.dp)
+                    .testTag("quicksetup_button_skip"),
             ) {
                 Text("Skip")
             }

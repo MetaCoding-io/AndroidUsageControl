@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -148,6 +149,7 @@ fun SettingsScreen(
                 title = "Revisit tour",
                 subtitle = "View the feature tour again",
                 onClick = onRevisitTour,
+                modifier = Modifier.testTag("settings_item_revisit_tour"),
             )
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
@@ -235,9 +237,10 @@ private fun SettingsItem(
     title: String,
     subtitle: String,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 12.dp),

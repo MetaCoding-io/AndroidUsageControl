@@ -14,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -193,7 +194,7 @@ private fun PermissionStepContent(
             Spacer(modifier = Modifier.height(24.dp))
             Button(
                 onClick = onContinue,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().testTag("permission_button_continue"),
             ) {
                 Text("Continue")
             }
@@ -201,14 +202,14 @@ private fun PermissionStepContent(
             // Not granted: priming CTA + skip option
             Button(
                 onClick = onOpenSettings,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().testTag("permission_button_grant"),
             ) {
                 Text("Grant Access")
             }
             Spacer(modifier = Modifier.height(8.dp))
             TextButton(
                 onClick = onSkip,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().testTag("permission_button_skip"),
             ) {
                 Text("Skip for now")
             }
