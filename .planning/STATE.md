@@ -59,5 +59,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: Roadmap written, STATE.md initialized — ready to plan Phase 1
+Stopped at: Milestone v0.2 fully initialized. Phase 1 planning not yet started — run /gsd:plan-phase 1
 Resume file: None
