@@ -9,10 +9,10 @@ Requirements for milestone v0.2 — User Testing. Each maps to roadmap phases.
 
 ### Onboarding Foundation
 
-- [ ] **ONBD-01**: User sees onboarding flow only on first launch (DataStore flag persists completion)
+- [x] **ONBD-01**: User sees onboarding flow only on first launch (DataStore flag persists completion)
 - [ ] **ONBD-02**: App routes to onboarding or main app based on completion flag before NavHost renders
 - [ ] **ONBD-03**: User can skip onboarding at any step and go directly to main app
-- [ ] **ONBD-04**: Existing v0.1 users who already have permissions granted auto-skip onboarding on update
+- [x] **ONBD-04**: Existing v0.1 users who already have permissions granted auto-skip onboarding on update
 
 ### Permission Walkthrough
 
@@ -56,10 +56,10 @@ Requirements for milestone v0.2 — User Testing. Each maps to roadmap phases.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ONBD-01 | Phase 1 | Pending |
+| ONBD-01 | Phase 1 | Complete |
 | ONBD-02 | Phase 1 | Pending |
 | ONBD-03 | Phase 1 | Pending |
-| ONBD-04 | Phase 1 | Pending |
+| ONBD-04 | Phase 1 | Complete |
 | PERM-01 | Phase 2 | Pending |
 | PERM-02 | Phase 2 | Pending |
 | PERM-03 | Phase 2 | Pending |

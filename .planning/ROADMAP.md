@@ -61,6 +61,6 @@ Phases execute in numeric order: 1 → 2 → 3
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 0/2 | Planned | - |
+| 1. Foundation | 1/2 | In Progress|  |
 | 2. Permission Walkthrough | 0/TBD | Not started | - |
 | 3. Welcome, Tour, and Quick Setup | 0/TBD | Not started | - |
