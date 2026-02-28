@@ -20,7 +20,7 @@ Requirements for milestone v0.2 — User Testing. Each maps to roadmap phases.
 - [x] **PERM-02**: App opens the correct system Settings screen for each permission (Notification Access, Usage Access, DND)
 - [x] **PERM-03**: App detects permission grant when user returns from Settings and shows green checkmark
 - [x] **PERM-04**: User sees step progress (1/3, 2/3, 3/3) during permission walkthrough
-- [ ] **PERM-05**: App works in degraded mode if user skips permissions, with clear messaging about what's missing
+- [x] **PERM-05**: App works in degraded mode if user skips permissions, with clear messaging about what's missing
 
 ### Welcome & Tour
 
@@ -64,7 +64,7 @@ Requirements for milestone v0.2 — User Testing. Each maps to roadmap phases.
 | PERM-02 | Phase 2 | Complete |
 | PERM-03 | Phase 2 | Complete |
 | PERM-04 | Phase 2 | Complete |
-| PERM-05 | Phase 2 | Pending |
+| PERM-05 | Phase 2 | Complete |
 | TOUR-01 | Phase 3 | Pending |
 | TOUR-02 | Phase 3 | Pending |
 | TOUR-03 | Phase 3 | Pending |

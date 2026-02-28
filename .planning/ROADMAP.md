@@ -13,7 +13,7 @@ This milestone makes the app self-sufficient for new users. A first-time install
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation** - Navigation architecture, DataStore flag, and permission-check utilities that gate the entire onboarding flow (completed 2026-02-28)
-- [ ] **Phase 2: Permission Walkthrough** - Three-step guided flow that walks users through Notification Access, Usage Access, and DND Access with live re-check on return
+- [x] **Phase 2: Permission Walkthrough** - Three-step guided flow that walks users through Notification Access, Usage Access, and DND Access with live re-check on return (completed 2026-02-28)
 - [ ] **Phase 3: Welcome, Tour, and Quick Setup** - Welcome screen, 5-tab feature tour, quick setup wizard, and revisit entry point in Settings
 
 ## Phase Details
@@ -64,5 +64,5 @@ Phases execute in numeric order: 1 → 2 → 3
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 2/2 | Complete   | 2026-02-28 |
-| 2. Permission Walkthrough | 1/2 | In Progress|  |
+| 2. Permission Walkthrough | 2/2 | Complete   | 2026-02-28 |
 | 3. Welcome, Tour, and Quick Setup | 0/TBD | Not started | - |

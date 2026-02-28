@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v0.2
 milestone_name: milestone
 status: active
-last_updated: "2026-02-28T20:22:30Z"
+last_updated: "2026-02-28T20:29:00Z"
 progress:
   total_phases: 3
   completed_phases: 1
   total_plans: 5
-  completed_plans: 3
+  completed_plans: 4
 ---
 
 # Project State
@@ -23,11 +23,11 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 ## Current Position
 
 Phase: 2 of 3 (Permission Walkthrough)
-Plan: 1 of 2 in current phase (Plan 02-01 complete)
-Status: Active — Plan 02-01 done, ready for Plan 02-02
-Last activity: 2026-02-28 — Completed Plan 02-01 (PermissionWalkthroughScreen replaces OnboardingPlaceholderScreen; 3-step walkthrough with ON_RESUME re-check, NLS rebind, step counter)
+Plan: 2 of 2 in current phase (Plan 02-02 auto-tasks complete; checkpoint:human-verify pending)
+Status: Active — Plan 02-02 Task 1 done, awaiting human verification (Task 2 checkpoint)
+Last activity: 2026-02-28 — Completed Plan 02-02 Task 1 (DegradedPermissionBanner in core-ui; PermissionChecker injected into all 3 feature ViewModels; ON_RESUME banner re-check in all 3 feature screens)
 
-Progress: [█████░░░░░] 50%
+Progress: [███████░░░] 70%
 
 ## Performance Metrics
 
@@ -41,10 +41,10 @@ Progress: [█████░░░░░] 50%
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-foundation | 2 | 5 min | 2.5 min |
-| 02-permission-walkthrough | 1 | 3 min | 3 min |
+| 02-permission-walkthrough | 2 | 7 min | 3.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (2 min), 01-02 (3 min), 02-01 (3 min)
+- Last 5 plans: 01-01 (2 min), 01-02 (3 min), 02-01 (3 min), 02-02 (4 min)
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -68,6 +68,9 @@ Recent decisions affecting current work:
 - 02-01: PermissionWalkthroughViewModel writes onboarding complete to DataStore; MainActivity onComplete lambda only navigates (no double-write)
 - 02-01: ComponentName for NLS service passed as string to avoid importing service-notification into feature-onboarding module
 - 02-01: autoAdvancePastGranted() on ViewModel init skips already-granted steps for kill+relaunch mid-walkthrough correctness
+- 02-02: DegradedPermissionBanner accepts only message: String — feature-specific text stays in feature modules (anti-pattern avoidance)
+- 02-02: No dismiss button on banner — persists while permission missing (hiding it hides a real problem)
+- 02-02: recheckPermission() is synchronous — PermissionChecker methods are system API calls with negligible latency
 
 ### Pending Todos
 
@@ -82,5 +85,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: Plan 02-01 complete — PermissionWalkthroughScreen built and wired into NavGraph. Phase 2 Plan 02 (degraded mode) is next.
+Stopped at: Plan 02-02 Task 1 complete — DegradedPermissionBanner built and integrated. Task 2 is checkpoint:human-verify (full Phase 2 device verification).
 Resume file: None
