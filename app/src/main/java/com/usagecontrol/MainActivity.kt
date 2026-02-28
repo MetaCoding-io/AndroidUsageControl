@@ -27,6 +27,7 @@ import com.usagecontrol.feature.lockcontrol.LockControlScreen
 import com.usagecontrol.feature.notifications.NotificationsScreen
 import com.usagecontrol.feature.onboarding.FeatureTourScreen
 import com.usagecontrol.feature.onboarding.PermissionWalkthroughScreen
+import com.usagecontrol.feature.onboarding.QuickSetupScreen
 import com.usagecontrol.feature.onboarding.WelcomeScreen
 import com.usagecontrol.feature.rules.RuleEditorScreen
 import com.usagecontrol.feature.rules.RuleListScreen
@@ -135,6 +136,15 @@ fun UsageControlAppContent(
                 composable("onboarding/permissions") {
                     PermissionWalkthroughScreen(
                         onComplete = {
+                            navController.navigate("onboarding/quicksetup") {
+                                popUpTo("onboarding/permissions") { inclusive = true }
+                            }
+                        }
+                    )
+                }
+                composable("onboarding/quicksetup") {
+                    QuickSetupScreen(
+                        onComplete = {
                             navController.navigate("main") {
                                 popUpTo("onboarding") { inclusive = true }
                             }
@@ -161,7 +171,18 @@ fun UsageControlAppContent(
                     )
                 }
                 composable(AppScreen.Insights.route) { LearningScreen() }
-                composable(AppScreen.Settings.route) { SettingsScreen() }
+                composable(AppScreen.Settings.route) {
+                    SettingsScreen(
+                        onRevisitTour = { navController.navigate("tour/standalone") },
+                    )
+                }
+
+                composable("tour/standalone") {
+                    FeatureTourScreen(
+                        onNext = { navController.popBackStack() },
+                        onSkip = { navController.popBackStack() },
+                    )
+                }
 
                 // Rule list (per-pillar or all)
                 composable(

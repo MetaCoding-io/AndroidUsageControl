@@ -22,6 +22,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
+    onRevisitTour: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val retentionDays by viewModel.retentionDays.collectAsStateWithLifecycle()
@@ -135,6 +136,18 @@ fun SettingsScreen(
                         exportSnackbar = "Rules copied to clipboard"
                     }
                 },
+            )
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+            // Help section
+            SectionHeader("Help")
+
+            SettingsItem(
+                icon = Icons.Default.Explore,
+                title = "Revisit tour",
+                subtitle = "View the feature tour again",
+                onClick = onRevisitTour,
             )
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
