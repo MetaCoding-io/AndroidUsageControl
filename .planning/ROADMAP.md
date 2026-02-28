@@ -55,8 +55,8 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. At the end of onboarding the user is offered a one-tap option to enable Night Mode preset, which activates immediately without navigating to the Rules tab
   4. A returning user can open Settings, tap a "Revisit tour" option, and view the feature tour again without triggering the full onboarding flow
 **Plans**: 2 plans
-- [ ] 03-01-PLAN.md -- Welcome + Tour: WelcomeScreen, FeatureTourScreen (HorizontalPager, 5 slides, dot indicators), onboarding nav graph expansion (TOUR-01, TOUR-02)
-- [ ] 03-02-PLAN.md -- Quick Setup + Revisit: QuickSetupViewModel, QuickSetupScreen (Night Mode preset), standalone tour route, Settings "Revisit tour" item, placeholder cleanup (TOUR-03, TOUR-04)
+- [x] 03-01-PLAN.md -- Welcome + Tour: WelcomeScreen, FeatureTourScreen (HorizontalPager, 5 slides, dot indicators), onboarding nav graph expansion (TOUR-01, TOUR-02)
+- [x] 03-02-PLAN.md -- Quick Setup + Revisit: QuickSetupViewModel, QuickSetupScreen (Night Mode preset), standalone tour route, Settings "Revisit tour" item, placeholder cleanup (TOUR-03, TOUR-04)
 
 ## Progress
 
