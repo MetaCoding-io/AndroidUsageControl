@@ -15,8 +15,12 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.usagecontrol.core.common.TimeUtils
+import com.usagecontrol.core.database.dao.DailyUsageTotalRow
 import com.usagecontrol.core.model.UsageRecord
 import com.usagecontrol.core.ui.component.EmptyState
+import com.usagecontrol.core.ui.component.SimpleBarChart
+import com.usagecontrol.core.ui.component.SimpleLineChart
+import com.usagecontrol.core.ui.component.StatCard
 import com.usagecontrol.core.ui.component.UsageBar
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -29,6 +33,8 @@ fun ScreenTimeScreen(
     val totalScreenTime by viewModel.totalScreenTime.collectAsStateWithLifecycle()
     val selectedDate by viewModel.selectedDate.collectAsStateWithLifecycle()
     val rules by viewModel.rules.collectAsStateWithLifecycle()
+    val dailyTotals by viewModel.dailyTotals.collectAsStateWithLifecycle()
+    val trendDays by viewModel.trendDays.collectAsStateWithLifecycle()
 
     var showLimitDialog by remember { mutableStateOf<UsageRecord?>(null) }
 
@@ -44,50 +50,82 @@ fun ScreenTimeScreen(
             }
         )
 
-        // Total screen time card
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-            ),
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(bottom = 16.dp),
         ) {
-            Column(
-                modifier = Modifier.padding(20.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Text(
-                    text = "Today's Screen Time",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                )
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    text = TimeUtils.formatDuration(totalScreenTime),
-                    style = MaterialTheme.typography.displaySmall,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                )
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    text = "${usageRecords.size} apps used",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
+            // Total screen time card
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    ),
+                ) {
+                    Column(
+                        modifier = Modifier.padding(20.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Text(
+                            text = "Today's Screen Time",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            text = TimeUtils.formatDuration(totalScreenTime),
+                            style = MaterialTheme.typography.displaySmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            text = "${usageRecords.size} apps used",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
+                        )
+                    }
+                }
+            }
+
+            // Trend section
+            item {
+                ScreenTimeTrend(
+                    dailyTotals = dailyTotals,
+                    selectedDays = trendDays,
+                    onDaysChanged = { viewModel.setTrendDays(it) },
                 )
             }
-        }
 
-        // App usage list
-        if (usageRecords.isEmpty()) {
-            EmptyState("No usage data yet. Grant Usage Access permission in Settings.")
-        } else {
-            val maxUsage = usageRecords.maxOfOrNull { it.foregroundTimeMs } ?: 1L
+            // App usage list
+            if (usageRecords.isEmpty()) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(32.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = "No usage data yet. Grant Usage Access permission in Settings.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+            } else {
+                item {
+                    Text(
+                        text = "Today's Apps",
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    )
+                }
 
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = 16.dp),
-            ) {
+                val maxUsage = usageRecords.maxOfOrNull { it.foregroundTimeMs } ?: 1L
+
                 items(usageRecords, key = { it.id }) { record ->
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -122,6 +160,93 @@ fun ScreenTimeScreen(
                 showLimitDialog = null
             },
         )
+    }
+}
+
+@Composable
+private fun ScreenTimeTrend(
+    dailyTotals: List<DailyUsageTotalRow>,
+    selectedDays: Int,
+    onDaysChanged: (Int) -> Unit,
+) {
+    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = "Usage Trend",
+                style = MaterialTheme.typography.titleMedium,
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                listOf(7 to "7d", 14 to "14d", 30 to "30d").forEach { (days, label) ->
+                    FilterChip(
+                        selected = selectedDays == days,
+                        onClick = { onDaysChanged(days) },
+                        label = { Text(label) },
+                    )
+                }
+            }
+        }
+
+        Spacer(Modifier.height(8.dp))
+
+        if (dailyTotals.isNotEmpty()) {
+            // Summary stats row
+            val avgMs = dailyTotals.map { it.totalMs }.average().toLong()
+            val maxDay = dailyTotals.maxByOrNull { it.totalMs }
+            val totalApps = dailyTotals.sumOf { it.appCount }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                StatCard(label = "Daily Avg", value = TimeUtils.formatDuration(avgMs), modifier = Modifier.weight(1f))
+                StatCard(
+                    label = "Peak Day",
+                    value = maxDay?.let { TimeUtils.formatDuration(it.totalMs) } ?: "-",
+                    modifier = Modifier.weight(1f),
+                )
+                StatCard(label = "Total Apps", value = "$totalApps", modifier = Modifier.weight(1f))
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            // Bar chart - daily screen time
+            Card(
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            ) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Text(
+                        text = "Daily Screen Time",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    SimpleBarChart(
+                        values = dailyTotals.map { it.totalMs / 60_000f }, // minutes
+                        labels = dailyTotals.map { it.date.takeLast(5) },
+                    )
+                }
+            }
+        } else {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+            ) {
+                Text(
+                    text = "No historical data yet",
+                    modifier = Modifier.padding(16.dp),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+
+        Spacer(Modifier.height(8.dp))
+        HorizontalDivider()
+        Spacer(Modifier.height(8.dp))
     }
 }
 

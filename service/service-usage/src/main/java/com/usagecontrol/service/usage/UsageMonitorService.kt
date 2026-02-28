@@ -37,6 +37,7 @@ class UsageMonitorService : Service() {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val blockedThisCycle = mutableSetOf<String>()
+    private var lastResetDate: String = ""
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -51,6 +52,12 @@ class UsageMonitorService : Service() {
         scope.launch {
             while (true) {
                 try {
+                    // Reset block tracking at midnight
+                    val today = TimeUtils.todayDate()
+                    if (today != lastResetDate) {
+                        blockedThisCycle.clear()
+                        lastResetDate = today
+                    }
                     pollUsageStats()
                     evaluateScreenTimeRules()
                 } catch (e: Exception) {

@@ -52,9 +52,25 @@ interface UsageDao {
     """)
     suspend fun getHeavyUsageApps(startDate: String, minAvgMs: Long): List<HeavyUsageRow>
 
+    // Daily total screen time for trend chart
+    @Query("""
+        SELECT date, SUM(foregroundTimeMs) as totalMs, COUNT(DISTINCT packageName) as appCount
+        FROM usage_records
+        WHERE date >= :startDate AND date <= :endDate
+        GROUP BY date
+        ORDER BY date ASC
+    """)
+    suspend fun getDailyTotals(startDate: String, endDate: String): List<DailyUsageTotalRow>
+
     @Query("DELETE FROM usage_records WHERE date < :cutoffDate")
     suspend fun deleteOlderThan(cutoffDate: String): Int
 }
+
+data class DailyUsageTotalRow(
+    val date: String,
+    val totalMs: Long,
+    val appCount: Int,
+)
 
 data class HeavyUsageRow(
     val packageName: String,

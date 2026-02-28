@@ -84,6 +84,33 @@ interface NotificationDao {
         ORDER BY totalNotifications DESC
     """)
     suspend fun getDismissStats(sinceTimestamp: Long): List<DismissStatsRow>
+
+    // Daily notification counts for trend chart
+    @Query("""
+        SELECT strftime('%Y-%m-%d', timestamp / 1000, 'unixepoch', 'localtime') as date,
+            COUNT(*) as total,
+            SUM(CASE WHEN userAction = 'DISMISSED' THEN 1 ELSE 0 END) as dismissed,
+            SUM(CASE WHEN userAction = 'OPENED' THEN 1 ELSE 0 END) as opened,
+            SUM(CASE WHEN userAction = 'AUTO_DISMISSED' THEN 1 ELSE 0 END) as autoDismissed
+        FROM notifications
+        WHERE timestamp >= :sinceTimestamp
+        GROUP BY date
+        ORDER BY date ASC
+    """)
+    suspend fun getDailyStats(sinceTimestamp: Long): List<DailyNotifStatsRow>
+
+    // Action breakdown for all notifications in period
+    @Query("""
+        SELECT
+            SUM(CASE WHEN userAction = 'DISMISSED' THEN 1 ELSE 0 END) as dismissed,
+            SUM(CASE WHEN userAction = 'OPENED' THEN 1 ELSE 0 END) as opened,
+            SUM(CASE WHEN userAction = 'AUTO_DISMISSED' THEN 1 ELSE 0 END) as autoDismissed,
+            SUM(CASE WHEN userAction = 'NONE' THEN 1 ELSE 0 END) as pending,
+            COUNT(*) as total
+        FROM notifications
+        WHERE timestamp >= :sinceTimestamp
+    """)
+    suspend fun getActionBreakdown(sinceTimestamp: Long): ActionBreakdownRow
 }
 
 data class AppInfo(
@@ -106,4 +133,20 @@ data class DismissStatsRow(
     val openedCount: Int,
     val autoDismissedCount: Int,
     val avgTimeToActionMs: Long?,
+)
+
+data class DailyNotifStatsRow(
+    val date: String,
+    val total: Int,
+    val dismissed: Int,
+    val opened: Int,
+    val autoDismissed: Int,
+)
+
+data class ActionBreakdownRow(
+    val dismissed: Int,
+    val opened: Int,
+    val autoDismissed: Int,
+    val pending: Int,
+    val total: Int,
 )

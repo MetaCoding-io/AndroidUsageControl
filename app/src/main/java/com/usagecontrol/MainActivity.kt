@@ -1,5 +1,6 @@
 package com.usagecontrol
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -25,6 +26,8 @@ import com.usagecontrol.feature.rules.RuleListScreen
 import com.usagecontrol.feature.screentime.ScreenTimeScreen
 import com.usagecontrol.feature.settings.SettingsScreen
 import com.usagecontrol.navigation.AppScreen
+import com.usagecontrol.service.context.ContextMonitorService
+import com.usagecontrol.service.usage.UsageMonitorService
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -32,10 +35,20 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        startMonitoringServices()
         setContent {
             UsageControlTheme {
                 UsageControlApp()
             }
+        }
+    }
+
+    private fun startMonitoringServices() {
+        try {
+            startForegroundService(Intent(this, UsageMonitorService::class.java))
+            startForegroundService(Intent(this, ContextMonitorService::class.java))
+        } catch (_: Exception) {
+            // Services may fail to start if permissions not yet granted
         }
     }
 }

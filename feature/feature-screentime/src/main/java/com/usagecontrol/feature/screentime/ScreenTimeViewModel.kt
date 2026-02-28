@@ -3,6 +3,7 @@ package com.usagecontrol.feature.screentime
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.usagecontrol.core.common.TimeUtils
+import com.usagecontrol.core.database.dao.DailyUsageTotalRow
 import com.usagecontrol.core.database.dao.RuleDao
 import com.usagecontrol.core.database.dao.UsageDao
 import com.usagecontrol.core.database.toEntity
@@ -34,6 +35,30 @@ class ScreenTimeViewModel @Inject constructor(
     val totalScreenTime = usageRecords.map { records ->
         records.sumOf { it.foregroundTimeMs }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0L)
+
+    // Trend data
+    private val _dailyTotals = MutableStateFlow<List<DailyUsageTotalRow>>(emptyList())
+    val dailyTotals: StateFlow<List<DailyUsageTotalRow>> = _dailyTotals
+
+    private val _trendDays = MutableStateFlow(7)
+    val trendDays: StateFlow<Int> = _trendDays
+
+    init {
+        loadTrend()
+    }
+
+    fun setTrendDays(days: Int) {
+        _trendDays.value = days
+        loadTrend()
+    }
+
+    private fun loadTrend() {
+        viewModelScope.launch {
+            val endDate = TimeUtils.todayDate()
+            val startDate = TimeUtils.dateOffset(-_trendDays.value)
+            _dailyTotals.value = usageDao.getDailyTotals(startDate, endDate)
+        }
+    }
 
     fun selectDate(date: String) {
         _selectedDate.value = date

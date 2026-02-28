@@ -2,6 +2,9 @@ package com.usagecontrol.feature.notifications
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.usagecontrol.core.common.TimeUtils
+import com.usagecontrol.core.database.dao.ActionBreakdownRow
+import com.usagecontrol.core.database.dao.DailyNotifStatsRow
 import com.usagecontrol.core.database.dao.NotificationDao
 import com.usagecontrol.core.database.dao.RuleDao
 import com.usagecontrol.core.database.toEntity
@@ -36,6 +39,33 @@ class NotificationsViewModel @Inject constructor(
     val rules = ruleDao.getByPillarFlow(RulePillar.NOTIFICATION.name)
         .map { list -> list.map { it.toModel() } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    // Dashboard data
+    private val _dailyStats = MutableStateFlow<List<DailyNotifStatsRow>>(emptyList())
+    val dailyStats: StateFlow<List<DailyNotifStatsRow>> = _dailyStats
+
+    private val _actionBreakdown = MutableStateFlow<ActionBreakdownRow?>(null)
+    val actionBreakdown: StateFlow<ActionBreakdownRow?> = _actionBreakdown
+
+    private val _dashboardDays = MutableStateFlow(7)
+    val dashboardDays: StateFlow<Int> = _dashboardDays
+
+    init {
+        loadDashboard()
+    }
+
+    fun setDashboardDays(days: Int) {
+        _dashboardDays.value = days
+        loadDashboard()
+    }
+
+    private fun loadDashboard() {
+        viewModelScope.launch {
+            val since = TimeUtils.daysAgo(_dashboardDays.value)
+            _dailyStats.value = notificationDao.getDailyStats(since)
+            _actionBreakdown.value = notificationDao.getActionBreakdown(since)
+        }
+    }
 
     fun selectApp(packageName: String?) {
         _selectedApp.value = packageName

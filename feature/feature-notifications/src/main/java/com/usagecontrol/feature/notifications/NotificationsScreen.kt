@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -19,7 +20,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.usagecontrol.core.common.TimeUtils
 import com.usagecontrol.core.model.NotificationAction
 import com.usagecontrol.core.model.NotificationRecord
+import com.usagecontrol.core.ui.component.DonutChart
 import com.usagecontrol.core.ui.component.EmptyState
+import com.usagecontrol.core.ui.component.SimpleLineChart
+import com.usagecontrol.core.ui.component.StatCard
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,12 +35,24 @@ fun NotificationsScreen(
     val apps by viewModel.apps.collectAsStateWithLifecycle()
     val selectedApp by viewModel.selectedApp.collectAsStateWithLifecycle()
     val rules by viewModel.rules.collectAsStateWithLifecycle()
+    val dailyStats by viewModel.dailyStats.collectAsStateWithLifecycle()
+    val actionBreakdown by viewModel.actionBreakdown.collectAsStateWithLifecycle()
+    val dashboardDays by viewModel.dashboardDays.collectAsStateWithLifecycle()
+
+    var showDashboard by remember { mutableStateOf(true) }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        // Top bar
         TopAppBar(
             title = { Text("Notifications") },
             actions = {
+                IconButton(onClick = { showDashboard = !showDashboard }) {
+                    Icon(
+                        Icons.Default.BarChart,
+                        contentDescription = "Toggle dashboard",
+                        tint = if (showDashboard) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
                 TextButton(onClick = onNavigateToRules) {
                     Icon(Icons.Default.NotificationsOff, contentDescription = null)
                     Spacer(Modifier.width(4.dp))
@@ -68,14 +84,26 @@ fun NotificationsScreen(
             }
         }
 
-        // Notification list
-        if (notifications.isEmpty()) {
+        if (notifications.isEmpty() && !showDashboard) {
             EmptyState("No notifications captured yet")
         } else {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(vertical = 8.dp),
             ) {
+                // Dashboard section
+                if (showDashboard) {
+                    item {
+                        NotificationDashboard(
+                            dailyStats = dailyStats,
+                            actionBreakdown = actionBreakdown,
+                            selectedDays = dashboardDays,
+                            onDaysChanged = { viewModel.setDashboardDays(it) },
+                        )
+                    }
+                }
+
+                // Notification list
                 items(notifications, key = { it.id }) { notification ->
                     NotificationItem(
                         notification = notification,
@@ -87,7 +115,103 @@ fun NotificationsScreen(
             }
         }
     }
+}
 
+@Composable
+private fun NotificationDashboard(
+    dailyStats: List<com.usagecontrol.core.database.dao.DailyNotifStatsRow>,
+    actionBreakdown: com.usagecontrol.core.database.dao.ActionBreakdownRow?,
+    selectedDays: Int,
+    onDaysChanged: (Int) -> Unit,
+) {
+    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+        // Day range selector
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            listOf(7 to "7d", 14 to "14d", 30 to "30d").forEach { (days, label) ->
+                FilterChip(
+                    selected = selectedDays == days,
+                    onClick = { onDaysChanged(days) },
+                    label = { Text(label) },
+                )
+            }
+        }
+
+        Spacer(Modifier.height(12.dp))
+
+        // Stats summary
+        if (actionBreakdown != null) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                StatCard(label = "Total", value = "${actionBreakdown.total}", modifier = Modifier.weight(1f))
+                StatCard(label = "Dismissed", value = "${actionBreakdown.dismissed}", modifier = Modifier.weight(1f))
+                StatCard(label = "Opened", value = "${actionBreakdown.opened}", modifier = Modifier.weight(1f))
+            }
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+        // Trend chart + donut side by side
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            // Line chart - daily notification trend
+            if (dailyStats.isNotEmpty()) {
+                Card(
+                    modifier = Modifier.weight(1f),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text(
+                            text = "Daily Trend",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        SimpleLineChart(
+                            dataPoints = dailyStats.map { it.total.toFloat() },
+                            labels = dailyStats.map { it.date.takeLast(5) },
+                        )
+                    }
+                }
+            }
+
+            // Donut chart - action breakdown
+            if (actionBreakdown != null && actionBreakdown.total > 0) {
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                ) {
+                    Column(
+                        modifier = Modifier.padding(12.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Text(
+                            text = "Actions",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        DonutChart(
+                            segments = listOf(
+                                actionBreakdown.dismissed.toFloat() to MaterialTheme.colorScheme.error,
+                                actionBreakdown.opened.toFloat() to MaterialTheme.colorScheme.primary,
+                                actionBreakdown.autoDismissed.toFloat() to MaterialTheme.colorScheme.tertiary,
+                                actionBreakdown.pending.toFloat() to MaterialTheme.colorScheme.outline,
+                            ),
+                            centerText = "${actionBreakdown.total}",
+                            modifier = Modifier.size(100.dp),
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(Modifier.height(8.dp))
+        HorizontalDivider()
+        Spacer(Modifier.height(8.dp))
+    }
 }
 
 @Composable
@@ -151,7 +275,6 @@ private fun NotificationItem(
                 )
             }
 
-            // Action badge
             Spacer(Modifier.height(4.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -180,4 +303,3 @@ private fun NotificationItem(
         }
     }
 }
-

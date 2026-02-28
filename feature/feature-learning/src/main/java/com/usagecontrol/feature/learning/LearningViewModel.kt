@@ -3,6 +3,8 @@ package com.usagecontrol.feature.learning
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.usagecontrol.core.common.TimeUtils
+import com.usagecontrol.core.database.dao.DailyNotifStatsRow
+import com.usagecontrol.core.database.dao.HourlyDismissRow
 import com.usagecontrol.core.database.dao.NotificationDao
 import com.usagecontrol.core.database.dao.RuleDao
 import com.usagecontrol.core.database.dao.SuggestionDao
@@ -46,6 +48,14 @@ class LearningViewModel @Inject constructor(
     private val _isAnalyzing = MutableStateFlow(false)
     val isAnalyzing: StateFlow<Boolean> = _isAnalyzing
 
+    // Hourly distribution data for bar chart
+    private val _hourlyData = MutableStateFlow<List<Float>>(List(24) { 0f })
+    val hourlyData: StateFlow<List<Float>> = _hourlyData
+
+    // Daily trend data for line chart
+    private val _dailyTrend = MutableStateFlow<List<DailyNotifStatsRow>>(emptyList())
+    val dailyTrend: StateFlow<List<DailyNotifStatsRow>> = _dailyTrend
+
     init {
         loadStats()
     }
@@ -83,9 +93,24 @@ class LearningViewModel @Inject constructor(
         viewModelScope.launch {
             _isLoading.value = true
             val sinceTimestamp = TimeUtils.daysAgo(_dayRange.value)
+
             _stats.value = notificationDao.getDismissStats(sinceTimestamp)
                 .map { it.toModel() }
                 .sortedByDescending { it.dismissRate }
+
+            // Load hourly distribution
+            val hourlyRows = notificationDao.getDismissalsByHour(sinceTimestamp)
+            val hourCounts = FloatArray(24)
+            hourlyRows.forEach { row ->
+                if (row.hour in 0..23) {
+                    hourCounts[row.hour] += row.count.toFloat()
+                }
+            }
+            _hourlyData.value = hourCounts.toList()
+
+            // Load daily trend
+            _dailyTrend.value = notificationDao.getDailyStats(sinceTimestamp)
+
             _isLoading.value = false
         }
     }

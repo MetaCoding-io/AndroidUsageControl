@@ -18,6 +18,8 @@ import com.usagecontrol.core.model.Suggestion
 import com.usagecontrol.core.model.SuggestionType
 import com.usagecontrol.core.ui.component.EmptyState
 import com.usagecontrol.core.ui.component.LoadingScreen
+import com.usagecontrol.core.ui.component.SimpleBarChart
+import com.usagecontrol.core.ui.component.SimpleLineChart
 import com.usagecontrol.core.ui.component.StatCard
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -30,6 +32,8 @@ fun LearningScreen(
     val dayRange by viewModel.dayRange.collectAsStateWithLifecycle()
     val suggestions by viewModel.suggestions.collectAsStateWithLifecycle()
     val isAnalyzing by viewModel.isAnalyzing.collectAsStateWithLifecycle()
+    val hourlyData by viewModel.hourlyData.collectAsStateWithLifecycle()
+    val dailyTrend by viewModel.dailyTrend.collectAsStateWithLifecycle()
 
     Column(modifier = Modifier.fillMaxSize()) {
         TopAppBar(
@@ -118,6 +122,15 @@ fun LearningScreen(
                         }
                     }
 
+                    // Charts section
+                    item {
+                        Spacer(Modifier.height(8.dp))
+                        InsightsCharts(
+                            hourlyData = hourlyData,
+                            dailyTrend = dailyTrend,
+                        )
+                    }
+
                     item {
                         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                         Text(
@@ -130,6 +143,62 @@ fun LearningScreen(
                     items(stats) { stat ->
                         AppStatsItem(stat)
                     }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun InsightsCharts(
+    hourlyData: List<Float>,
+    dailyTrend: List<com.usagecontrol.core.database.dao.DailyNotifStatsRow>,
+) {
+    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+        // Daily notification trend
+        if (dailyTrend.isNotEmpty()) {
+            Card(
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            ) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Text(
+                        text = "Notification Trend",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    SimpleLineChart(
+                        dataPoints = dailyTrend.map { it.total.toFloat() },
+                        labels = dailyTrend.map { it.date.takeLast(5) },
+                    )
+                }
+            }
+            Spacer(Modifier.height(12.dp))
+        }
+
+        // Hourly distribution
+        if (hourlyData.any { it > 0f }) {
+            Card(
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            ) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Text(
+                        text = "Dismissals by Hour",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    // Show every 3 hours for readability
+                    val labels = (0..23).map { h ->
+                        if (h % 3 == 0) "${h}h" else ""
+                    }
+                    val peakHour = hourlyData.indices.maxByOrNull { hourlyData[it] } ?: -1
+                    SimpleBarChart(
+                        values = hourlyData,
+                        labels = labels,
+                        highlightIndex = peakHour,
+                        highlightColor = MaterialTheme.colorScheme.error,
+                    )
                 }
             }
         }

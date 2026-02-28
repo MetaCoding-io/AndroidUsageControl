@@ -23,6 +23,9 @@ interface RuleDao {
     @Query("SELECT * FROM rules ORDER BY priority DESC, createdAt DESC")
     fun getAllFlow(): Flow<List<RuleEntity>>
 
+    @Query("SELECT * FROM rules ORDER BY priority DESC, createdAt DESC")
+    suspend fun getAll(): List<RuleEntity>
+
     @Query("SELECT * FROM rules WHERE pillar = :pillar AND enabled = 1 ORDER BY priority DESC")
     suspend fun getEnabledByPillar(pillar: String): List<RuleEntity>
 
