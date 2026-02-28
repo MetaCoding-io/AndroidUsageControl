@@ -39,7 +39,16 @@ Help users become aware of and take control of their phone usage patterns — sc
 
 ### Active
 
-(None yet — no active milestone)
+#### Current Milestone: v0.2 User Testing
+
+**Goal:** Make the app self-sufficient for new users — a new user can install, grant permissions, and start using the app without help.
+
+**Target features:**
+- Welcome screen with value proposition
+- Guided permission flow (Notification Access, Usage Access, DND Access)
+- Feature tour of the 5 tabs
+- Quick setup wizard (first rule or preset)
+- Bug fixes and UX polish from daily use
 
 ### Out of Scope
 
@@ -79,4 +88,4 @@ Help users become aware of and take control of their phone usage patterns — sc
 | Foreground services over JobScheduler | More reliable polling, user-visible indicators | — Pending |
 
 ---
-*Last updated: 2026-02-28 after GSD initialization*
+*Last updated: 2026-02-28 after milestone v0.2 started*
