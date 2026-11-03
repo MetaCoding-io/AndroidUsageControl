@@ -1,0 +1,622 @@
+<title>Usage Control Redesign</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a single 760px reading column; mockups break out to a wider rail on desktop and stack on phones. Dark-first: the page wears the proposed theme. */
+:root {
+  --bg: #0E1116; --surf1: #151A21; --surf2: #1C222B; --surf3: #242B36; --line: #2A3340;
+  --fg: #E8ECF1; --muted: #98A3B1; --faint: #5F6B79;
+  --accent: #F5B544; --on-accent: #1A1200; --accent-soft: rgba(245,181,68,.14);
+  --people: #FF6B5B; --money: #3DDC84; --deliv: #38BDF8; --work: #A78BFA; --live: #F472B6; --noise: #6B7A8C;
+  --good: #3DDC84; --warn: #F5B544; --bad: #FF6B5B;
+  --bezel: #0A0C10; --bezel-line: #2A3340;
+  --font-ui: "Manrope", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "DM Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #F6F3EC; --surf1: #FFFFFF; --surf2: #EFEBE2; --surf3: #E6E1D6; --line: #D9D3C6;
+    --fg: #1A1C1F; --muted: #5C6570; --faint: #8A9199;
+    --accent: #B9780A; --on-accent: #FFFFFF; --accent-soft: rgba(185,120,10,.12);
+    --people: #D14A3A; --money: #1D9A5B; --deliv: #0E7FB0; --work: #6F55C9; --live: #C23F85; --noise: #6B7580;
+    --good: #1D9A5B; --warn: #B9780A; --bad: #D14A3A;
+    --bezel: #1A1C1F; --bezel-line: #3A3D42;
+    color-scheme: light;
+  }
+}
+:root[data-theme="light"] {
+  --bg: #F6F3EC; --surf1: #FFFFFF; --surf2: #EFEBE2; --surf3: #E6E1D6; --line: #D9D3C6;
+  --fg: #1A1C1F; --muted: #5C6570; --faint: #8A9199;
+  --accent: #B9780A; --on-accent: #FFFFFF; --accent-soft: rgba(185,120,10,.12);
+  --people: #D14A3A; --money: #1D9A5B; --deliv: #0E7FB0; --work: #6F55C9; --live: #C23F85; --noise: #6B7580;
+  --good: #1D9A5B; --warn: #B9780A; --bad: #D14A3A;
+  --bezel: #1A1C1F; --bezel-line: #3A3D42;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-ui); font-size: 16px; line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 64px; }
+.wrap { max-width: 760px; margin: 0 auto; }
+.wide { max-width: 1040px; margin: 0 auto; }
+h1, h2, h3 { text-wrap: balance; line-height: 1.15; margin: 0; }
+h1 { font-size: clamp(32px, 5vw, 48px); font-weight: 800; letter-spacing: -.02em; }
+h2 { font-size: clamp(24px, 3.4vw, 30px); font-weight: 800; letter-spacing: -.015em; margin-top: 72px; margin-bottom: 8px; }
+h3 { font-size: 18px; font-weight: 700; margin-top: 32px; margin-bottom: 6px; }
+p { margin: 0 0 14px; max-width: 68ch; }
+p.lede { font-size: 18px; color: var(--muted); max-width: 60ch; }
+a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+.eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+.eyebrow::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 10px var(--accent); }
+header.top { padding-block: 56px 24px; border-bottom: 1px solid var(--line); }
+header.top .meta { font-family: var(--font-mono); font-size: 13px; color: var(--muted); margin-top: 18px; display: flex; flex-wrap: wrap; gap: 6px 20px; }
+ul, ol { padding-left: 22px; margin: 0 0 14px; max-width: 68ch; }
+li { margin-bottom: 6px; }
+li::marker { color: var(--muted); }
+strong { font-weight: 700; }
+code, .mono { font-family: var(--font-mono); font-size: .92em; }
+code { background: var(--surf2); padding: 1px 6px; border-radius: 4px; }
+table { border-collapse: collapse; width: 100%; font-size: 14.5px; margin: 10px 0 18px; }
+th, td { text-align: left; vertical-align: top; padding: 10px 10px; border-bottom: 1px solid var(--line); }
+th { font-family: var(--font-mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+.tablewrap { overflow-x: auto; }
+.tldr { counter-reset: n; display: grid; gap: 14px; margin: 24px 0 0; padding: 0; list-style: none; max-width: none; }
+.tldr li { display: grid; grid-template-columns: 36px 1fr; gap: 12px; padding: 16px 18px; background: var(--surf1); border: 1px solid var(--line); border-radius: 12px; margin: 0; }
+.tldr li::before { counter-increment: n; content: counter(n); font-family: var(--font-mono); font-size: 20px; color: var(--accent); line-height: 1.2; }
+.tldr li > b, .tldr li > span { grid-column: 2; }
+.tldr b { display: block; margin-bottom: 4px; }
+.tldr span { color: var(--muted); font-size: 15px; }
+.note { border-left: 3px solid var(--accent); padding: 10px 16px; background: var(--accent-soft); border-radius: 0 10px 10px 0; margin: 18px 0; max-width: 68ch; }
+.note p:last-child { margin-bottom: 0; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
+.two > * { min-width: 0; }
+@media (max-width: 760px) { .two { grid-template-columns: 1fr; } }
+
+/* Palette */
+.swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 10px; margin: 14px 0 22px; }
+.sw { border-radius: 10px; border: 1px solid var(--line); overflow: hidden; background: var(--surf1); }
+.sw .chip { height: 56px; }
+.sw .lbl { padding: 8px 10px; font-size: 12.5px; }
+.sw .lbl b { display: block; font-weight: 700; }
+.sw .lbl span { font-family: var(--font-mono); color: var(--muted); font-size: 11.5px; }
+.led { display: inline-block; width: 10px; height: 10px; border-radius: 50%; vertical-align: middle; box-shadow: 0 0 8px currentColor; background: currentColor; }
+.lane-row { display: flex; flex-wrap: wrap; gap: 10px 18px; margin: 10px 0 20px; }
+.lane-row .lane { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; }
+.spec { display: grid; gap: 6px; padding: 20px 22px; background: var(--surf1); border: 1px solid var(--line); border-radius: 12px; margin: 10px 0 20px; }
+.spec .d1 { font-size: 40px; font-weight: 800; letter-spacing: -.02em; line-height: 1.05; }
+.spec .d2 { font-size: 22px; font-weight: 700; }
+.spec .b1 { font-size: 16px; }
+.spec .b2 { font-size: 14px; color: var(--muted); }
+.spec .m1 { font-family: var(--font-mono); font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.spec .cap { font-family: var(--font-mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
+
+/* IA diagram */
+.ia { display: grid; grid-template-columns: 1fr auto 1fr; gap: 16px; align-items: center; margin: 16px 0 24px; }
+.ia .col { display: grid; gap: 8px; }
+.ia .tab { padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--surf1); font-size: 14px; display: flex; justify-content: space-between; gap: 10px; }
+.ia .tab small { color: var(--muted); font-family: var(--font-mono); font-size: 11.5px; }
+.ia .tab.hidden-tab { border-style: dashed; color: var(--muted); }
+.ia .tab.new { border-color: var(--accent); background: var(--accent-soft); }
+.ia .arrow { font-family: var(--font-mono); color: var(--muted); font-size: 22px; text-align: center; }
+@media (max-width: 640px) { .ia { grid-template-columns: 1fr; } .ia .arrow { transform: rotate(90deg); } }
+
+/* Phone mockups */
+.rail { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 28px 24px; margin: 20px 0 10px; justify-items: center; }
+.rail figure { margin: 0; max-width: 320px; width: 100%; }
+.rail figcaption { font-size: 14px; color: var(--muted); margin-top: 12px; line-height: 1.45; }
+.rail figcaption b { color: var(--fg); }
+.rail.audit { grid-template-columns: minmax(290px, 320px) 1fr; align-items: start; justify-items: stretch; }
+@media (max-width: 760px) { .rail.audit { grid-template-columns: 1fr; justify-items: center; } }
+code { overflow-wrap: anywhere; }
+li, p, td { overflow-wrap: anywhere; }
+.phone { width: 100%; max-width: 300px; margin: 0 auto; aspect-ratio: 300 / 680; max-height: none; border-radius: 34px; background: var(--bg); border: 7px solid var(--bezel); outline: 1px solid var(--bezel-line); overflow: hidden; display: flex; flex-direction: column; position: relative; font-size: 12.5px; line-height: 1.35; box-shadow: 0 24px 60px rgba(0,0,0,.35); }
+.phone * { min-width: 0; }
+.sb { display: flex; justify-content: space-between; align-items: center; padding: 10px 18px 4px; font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
+.sb .dots { display: flex; gap: 5px; }
+.sb .dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--faint); display: block; }
+.screen { flex: 1; overflow: hidden; padding: 6px 14px 0; display: flex; flex-direction: column; gap: 8px; }
+.ctx { display: flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 10.5px; color: var(--muted); white-space: nowrap; overflow: hidden; }
+.ctx i { width: 6px; height: 6px; border-radius: 50%; background: var(--good); box-shadow: 0 0 6px var(--good); flex-shrink: 0; }
+.ctx .gear { margin-left: auto; color: var(--faint); font-family: var(--font-ui); }
+.hero { display: flex; align-items: baseline; gap: 10px; padding: 6px 2px 2px; }
+.hero .n { font-size: 54px; font-weight: 800; letter-spacing: -.03em; line-height: 1; font-variant-numeric: tabular-nums; }
+.hero .t { display: grid; }
+.hero .t b { font-size: 13px; }
+.hero .t span { font-family: var(--font-mono); font-size: 10.5px; color: var(--muted); }
+.card { background: var(--surf2); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+.card .ledrow { display: flex; gap: 10px; font-family: var(--font-mono); font-size: 10.5px; color: var(--muted); margin-bottom: 6px; }
+.card .ledrow span { display: inline-flex; align-items: center; gap: 4px; }
+.card .ledrow .led { width: 7px; height: 7px; box-shadow: 0 0 6px currentColor; }
+.card .title { font-weight: 700; font-size: 13px; }
+.card .sub { color: var(--muted); font-size: 11.5px; }
+.split { display: inline-flex; margin-top: 8px; border-radius: 999px; overflow: hidden; font-size: 11.5px; font-weight: 700; }
+.split span { background: var(--accent); color: var(--on-accent); padding: 6px 12px; }
+.split span + span { border-left: 1px solid rgba(0,0,0,.25); padding: 6px 10px; }
+.sec { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); padding-top: 4px; }
+.row { display: grid; grid-template-columns: 10px 26px 1fr auto; gap: 8px; align-items: center; padding: 5px 0; border-bottom: 1px solid var(--line); }
+.row:last-child { border-bottom: 0; }
+.row .led { width: 8px; height: 8px; box-shadow: 0 0 7px currentColor; }
+.row .ic { width: 26px; height: 26px; border-radius: 8px; background: var(--surf3); display: grid; place-items: center; font-size: 10px; font-weight: 800; color: var(--muted); }
+.row .ic.av { border-radius: 50%; background: var(--people); color: #fff; }
+.row .tx { display: grid; line-height: 1.25; }
+.row .tx b { font-size: 12.5px; font-weight: 700; }
+.row .tx span { font-size: 11.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row .tm { font-family: var(--font-mono); font-size: 10.5px; color: var(--faint); font-variant-numeric: tabular-nums; }
+.row.dim { opacity: .55; }
+.tag { display: inline-block; font-family: var(--font-mono); font-size: 9.5px; padding: 1px 6px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); margin-left: 4px; vertical-align: middle; }
+.restore { display: flex; justify-content: space-between; align-items: center; font-size: 11.5px; color: var(--muted); padding: 6px 10px; background: var(--surf1); border: 1px dashed var(--line); border-radius: 10px; }
+.restore b { color: var(--accent); font-weight: 700; }
+.nav { display: grid; grid-template-columns: repeat(3, 1fr); padding: 6px 10px 12px; border-top: 1px solid var(--line); background: var(--surf1); margin-top: auto; }
+.nav div { text-align: center; font-size: 10.5px; color: var(--muted); display: grid; gap: 2px; justify-items: center; }
+.nav div i { width: 36px; height: 18px; border-radius: 999px; display: block; }
+.nav div.on { color: var(--fg); font-weight: 700; }
+.nav div.on i { background: var(--accent-soft); box-shadow: inset 0 0 0 1px var(--accent); }
+.appbar { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
+.appbar .back { color: var(--muted); font-family: var(--font-mono); }
+.appbar b { font-size: 15px; }
+.prof { display: flex; align-items: center; gap: 10px; }
+.prof .big { width: 42px; height: 42px; border-radius: 12px; background: var(--surf3); display: grid; place-items: center; font-weight: 800; color: var(--muted); }
+.prof .t b { display: block; font-size: 15px; }
+.prof .t span { font-family: var(--font-mono); font-size: 10.5px; color: var(--muted); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips span { display: inline-flex; align-items: center; gap: 5px; padding: 4px 9px; border-radius: 999px; border: 1px solid var(--line); font-size: 11px; color: var(--muted); }
+.chips span.on { border-color: var(--fg); color: var(--fg); font-weight: 700; }
+.chips .led { width: 7px; height: 7px; }
+.seg { display: grid; grid-template-columns: repeat(5, 1fr); border: 1px solid var(--line); border-radius: 999px; overflow: hidden; font-size: 10px; text-align: center; }
+.seg span { padding: 6px 2px; color: var(--muted); }
+.seg span.on { background: var(--accent); color: var(--on-accent); font-weight: 700; }
+.stats { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: center; }
+.ring { width: 58px; height: 58px; border-radius: 50%; background: conic-gradient(var(--bad) 0 92%, var(--surf3) 92% 100%); display: grid; place-items: center; }
+.ring i { width: 42px; height: 42px; border-radius: 50%; background: var(--surf2); display: grid; place-items: center; font-family: var(--font-mono); font-size: 11px; font-style: normal; }
+.kv { display: grid; gap: 2px; font-size: 11px; color: var(--muted); }
+.kv b { color: var(--fg); font-family: var(--font-mono); font-weight: 500; }
+.bars { display: flex; align-items: flex-end; gap: 2px; height: 34px; margin-top: 6px; }
+.bars i { flex: 1; background: var(--surf3); border-radius: 2px 2px 0 0; display: block; }
+.bars i.hi { background: var(--work); }
+.sugg { border-color: var(--accent); background: var(--accent-soft); }
+.sugg .btns { display: flex; gap: 6px; margin-top: 8px; }
+.sugg .btns span { font-size: 11px; font-weight: 700; padding: 5px 10px; border-radius: 999px; background: var(--accent); color: var(--on-accent); }
+.sugg .btns span.ghost { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+.mode { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: start; }
+.mode .t b { display: block; font-size: 13.5px; }
+.mode .t span { display: block; font-family: var(--font-mono); font-size: 10px; color: var(--muted); margin-top: 1px; }
+.mode .t p { font-size: 11px; color: var(--muted); margin: 6px 0 0; max-width: none; }
+.tog { width: 38px; height: 22px; border-radius: 999px; background: var(--surf3); position: relative; }
+.tog::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: var(--faint); }
+.tog.on { background: var(--accent); }
+.tog.on::after { left: 19px; background: var(--on-accent); }
+.mini { display: grid; gap: 8px; }
+
+/* "Before" mockup: a picture of the current app, deliberately in its own fixed colours. */
+.before { background: #FBFDF8; color: #191C1A; }
+.before .sb { color: #5B615C; }
+.before .tb { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; font-weight: 600; font-size: 15px; }
+.before .tb span { font-size: 11px; color: #1B6C4E; font-weight: 600; }
+.before .fchips { display: flex; gap: 6px; overflow: hidden; }
+.before .fchips span { font-size: 10.5px; padding: 4px 9px; border: 1px solid #C0C9C1; border-radius: 8px; white-space: nowrap; color: #191C1A; }
+.before .fchips span.on { background: #CFE9D8; border-color: #CFE9D8; }
+.before .stat3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.before .stat3 div { background: #DEE5DD; border-radius: 10px; padding: 8px; }
+.before .stat3 b { display: block; font-size: 18px; color: #1B6C4E; }
+.before .stat3 span { font-size: 9.5px; color: #40493F; }
+.before .charts { display: grid; grid-template-columns: 1fr 86px; gap: 8px; }
+.before .charts div { background: #fff; border: 1px solid #E4E8E3; border-radius: 10px; padding: 8px; font-size: 9.5px; color: #40493F; }
+.before .line { height: 46px; margin-top: 6px; background: linear-gradient(to top, rgba(27,108,78,.12), transparent 60%); border-bottom: 1px solid #C0C9C1; position: relative; }
+.before .line::after { content: ""; position: absolute; left: 0; right: 0; bottom: 14px; height: 1px; background: #1B6C4E; transform: rotate(-6deg); transform-origin: left; }
+.before .donut { width: 56px; height: 56px; border-radius: 50%; margin: 6px auto 0; background: conic-gradient(#BA1A1A 0 70%, #1B6C4E 70% 86%, #3D6373 86% 100%); display: grid; place-items: center; }
+.before .donut i { width: 36px; height: 36px; border-radius: 50%; background: #fff; }
+.before .ncard { background: #fff; border: 1px solid #E4E8E3; border-radius: 10px; padding: 8px 10px; font-size: 11px; }
+.before .ncard .h { display: flex; justify-content: space-between; color: #1B6C4E; font-size: 10px; font-weight: 600; }
+.before .ncard .h i { color: #70786F; font-style: normal; }
+.before .ncard b { display: block; margin-top: 2px; }
+.before .ncard span { color: #40493F; font-size: 10.5px; }
+.before .ncard .pend { color: #70786F; font-size: 9.5px; margin-top: 2px; display: block; }
+.before .bnav { display: grid; grid-template-columns: repeat(5, 1fr); padding: 6px 4px 10px; background: #EEF3EE; margin-top: auto; font-size: 8.5px; color: #40493F; text-align: center; }
+.before .bnav div { display: grid; gap: 2px; justify-items: center; }
+.before .bnav i { width: 30px; height: 14px; border-radius: 999px; display: block; }
+.before .bnav .on { color: #002115; font-weight: 700; }
+.before .bnav .on i { background: #A6F5CE; }
+.fold { position: absolute; left: 0; right: 0; bottom: 48px; border-top: 2px dashed var(--bad); }
+.fold span { position: absolute; right: 10px; top: -20px; font-family: var(--font-mono); font-size: 10px; color: var(--bad); background: var(--bg); padding: 1px 6px; border-radius: 4px; }
+
+/* Flow diagram */
+.flow { display: flex; flex-wrap: wrap; gap: 10px; align-items: stretch; margin: 16px 0 10px; }
+.flow .step { flex: 1 1 150px; min-width: 0; padding: 12px 14px; background: var(--surf1); border: 1px solid var(--line); border-radius: 12px; font-size: 14px; }
+.flow .step b { display: block; font-size: 15px; margin-bottom: 4px; }
+.flow .step span { color: var(--muted); font-size: 13px; display: block; }
+.flow .step.hot { border-color: var(--accent); }
+.policies { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 10px 0 20px; }
+.policies div { padding: 12px 14px; border-radius: 12px; background: var(--surf1); border: 1px solid var(--line); font-size: 13.5px; }
+.policies b { display: block; font-size: 15px; margin-bottom: 4px; }
+.policies span { color: var(--muted); }
+
+/* Notification mocks (standalone, not inside phones) */
+.shade { display: grid; gap: 10px; max-width: 420px; }
+.notif { background: var(--surf2); border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px; font-size: 13px; }
+.notif .h { display: flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+.notif .h .appdot { width: 14px; height: 14px; border-radius: 4px; background: var(--accent); display: inline-block; }
+.notif .h .tm { margin-left: auto; }
+.notif .lines { display: grid; gap: 3px; }
+.notif .lines div { display: flex; gap: 8px; align-items: center; }
+.notif .lines .led { width: 7px; height: 7px; flex-shrink: 0; }
+.notif .lines span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.notif .acts { display: flex; gap: 14px; margin-top: 10px; font-weight: 700; font-size: 12.5px; color: var(--accent); text-transform: uppercase; letter-spacing: .04em; }
+.notif .ledrow { display: flex; gap: 12px; font-family: var(--font-mono); font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+.notif .ledrow span { display: inline-flex; align-items: center; gap: 5px; }
+.notif .ledrow .led { width: 8px; height: 8px; }
+.notif .ask { font-weight: 700; margin-bottom: 8px; }
+.notif .chips { gap: 6px; }
+
+/* Roadmap */
+.phases { display: grid; gap: 10px; margin: 14px 0 20px; max-width: none; padding: 0; list-style: none; }
+.phases li { display: grid; grid-template-columns: 34px 1fr; gap: 12px; align-items: start; padding: 12px 14px; background: var(--surf1); border: 1px solid var(--line); border-radius: 12px; margin: 0; }
+.phases li i { font-style: normal; font-family: var(--font-mono); color: var(--accent); font-size: 16px; }
+.phases li b { display: block; }
+.phases li span { color: var(--muted); font-size: 14.5px; }
+.phases li.pre { border-style: dashed; }
+.feas { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; margin: 14px 0 20px; }
+.feas div { padding: 12px 14px; border-radius: 12px; background: var(--surf1); border: 1px solid var(--line); font-size: 14px; }
+.feas b { display: block; margin-bottom: 4px; }
+.feas .ok::before, .feas .no::before, .feas .mid::before { font-family: var(--font-mono); font-size: 11px; letter-spacing: .06em; display: inline-block; margin-bottom: 6px; padding: 1px 7px; border-radius: 999px; }
+.feas .ok::before { content: "POSSIBLE"; color: var(--good); background: rgba(61,220,132,.12); }
+.feas .mid::before { content: "WORKAROUND"; color: var(--warn); background: var(--accent-soft); }
+.feas .no::before { content: "SYSTEM ONLY"; color: var(--bad); background: rgba(255,107,91,.12); }
+.srcs { font-size: 13.5px; color: var(--muted); }
+.srcs li { margin-bottom: 4px; }
+footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--line); font-family: var(--font-mono); font-size: 12px; color: var(--faint); }
+@media (prefers-reduced-motion: no-preference) { .led { animation: none; } }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+</style>
+
+<div class="wrap">
+<header class="top">
+  <div class="eyebrow">Product and UI review · AndroidUsageControl v0.2</div>
+  <h1 style="margin-top:14px">Usage Control Redesign</h1>
+  <p class="lede" style="margin-top:16px">The app captures notifications and auto-dismisses them. It does not yet change how the phone feels. This review proposes a theme with a point of view, a three-tab shell, and a notification model built on lanes, sender screening, batched delivery and a forgiving archive.</p>
+  <div class="meta"><span>3 Nov 2026</span><span>Kotlin · Compose · Material 3 1.2 → 1.5 Expressive</span><span>Full text: <code>.planning/research/DESIGN-REVIEW.md</code></span></div>
+</header>
+
+<h2 id="tldr">Five findings</h2>
+<ol class="tldr">
+  <li><b>The app has no identity.</b><span>Dynamic colour is on, the fallback is stock Material green, and every tab is the same top bar over a list of cards. An app whose job is colour-coding notifications cannot let the wallpaper choose its colours. Go dark-first, static palette, one motif: the notification LED.</span></li>
+  <li><b>Five tabs hide one idea.</b><span>Notifications, Screen Time, Controls, Insights and Settings all describe the same thing from different angles: every app gets a policy. Three tabs (Now, Apps, Modes) say that out loud. Rules and Insights fold into a per-app profile.</span></li>
+  <li><b>The notification feature is a log.</b><span>The listener stores title and text and executes one action, dismiss. Mute and snooze exist only as enum values. No icons, channels, people, actions or intents are captured, and dismissals are matched by timestamp instead of key.</span></li>
+  <li><b>Lanes are the product.</b><span>A lane is a named bucket with a colour, a delivery policy (Instant, Batched, Quiet, Digest, Blocked), a decay rule and breakthrough keywords. New senders are screened once and routed forever. Everything removed is recoverable. No Android app combines content bucketing, keyword breakthrough, sender screening and deferral to breakpoints.</span></li>
+  <li><b>The SemPKM link does not exist and the privacy rule forbids it.</b><span>No INTERNET permission; SemPKM's own Expo app already does the job. Proposal: an opt-in bridge module speaking the existing context API, sending context only, never content, plus two new fields: focus mode and notification pressure.</span></li>
+</ol>
+</div>
+
+<div class="wide">
+<h2 id="audit" style="text-align:center">1 · What exists today</h2>
+<p class="lede" style="margin:0 auto; text-align:center">The Notifications tab, as built. Three things are visible at once: the dashboard pushes the feed below the fold, every card looks identical, and there is nothing to do with a notification except expand it.</p>
+<div class="rail audit">
+  <figure>
+    <div class="phone before">
+      <div class="sb"><span>9:41</span><div class="dots"><i></i><i></i><i></i></div></div>
+      <div class="screen">
+        <div class="tb">Notifications <span>▮▮ &nbsp; Rules (2)</span></div>
+        <div class="fchips"><span class="on">All</span><span>Chrome</span><span>DHL</span><span>Gmail</span><span>Slack</span><span>WhatsApp</span></div>
+        <div class="fchips"><span class="on">7d</span><span>14d</span><span>30d</span></div>
+        <div class="stat3"><div><b>312</b><span>Total</span></div><div><b>240</b><span>Dismissed</span></div><div><b>51</b><span>Opened</span></div></div>
+        <div class="charts"><div>Daily Trend<div class="line"></div></div><div>Actions<div class="donut"><i></i></div></div></div>
+        <div class="ncard"><div class="h">Zalando <i>12:04</i></div><b>Last chance: 20% off sneakers</b><span>Only today. Tap to shop the sale before it ends…</span><span class="pend">Pending</span></div>
+        <div class="ncard"><div class="h">WhatsApp <i>11:58</i></div><b>Anna</b><span>are we still on for lunch?</span><span class="pend">Opened</span></div>
+      </div>
+      <div class="bnav"><div class="on"><i></i>Notifications</div><div><i></i>Screen Time</div><div><i></i>Controls</div><div><i></i>Insights</div><div><i></i>Settings</div></div>
+      <div class="fold"><span>fold on a 6.1" phone</span></div>
+    </div>
+    <figcaption><b>Today.</b> Wallpaper-driven colour (green fallback shown), dashboard first, uniform cards, no icons, one action.</figcaption>
+  </figure>
+  <div>
+    <h3 style="margin-top:0">Screen by screen</h3>
+    <ul>
+      <li><b>Theme.</b> <code>dynamicColor = true</code>, so on Android 12+ the app wears the wallpaper. Material defaults for type and shape. Material 3 is pinned at 1.2.0, before Expressive.</li>
+      <li><b>Navigation.</b> Five tabs plus a hidden Rules screen reached from three of them. Insights and the Notifications dashboard draw the same Total / Dismissed / Opened triplet and the same trend line twice.</li>
+      <li><b>Notifications.</b> No app icon, no colour, no time sections, no search (the DAO has a <code>search()</code> the UI never calls), no swipe. Expanding a card offers "Auto-dismiss this app" and nothing else.</li>
+      <li><b>Controls.</b> The name says nothing; these are modes. The context card is the most interesting object in the app and it is buried on tab three.</li>
+      <li><b>Insights.</b> Suggestions are phrased as rules ("Auto-dismiss X") with a confidence bar. Users do not think in rules; they think "this app is noise".</li>
+      <li><b>Onboarding.</b> The permission walkthrough is good. The welcome screen is a paragraph with nothing to look at.</li>
+    </ul>
+    <h3>Listener defects that block everything below</h3>
+    <ul>
+      <li>Removals are matched by <code>postTime ± 1 s</code>, not by <code>sbn.key</code>. Updates to the same key insert new rows, inflating every count.</li>
+      <li>No small or large icon, colour, picture, MessagingStyle messages, channel id, importance, conversation flag, actions, RemoteInputs or contentIntent are stored. The feed cannot show an icon; a restored notification cannot open or reply.</li>
+      <li>Ongoing notifications (media, foreground services, progress) are logged as events and pollute history and stats.</li>
+      <li>No <code>getActiveNotifications()</code> sync on connect, so after a restart the app does not know what is in the shade.</li>
+    </ul>
+  </div>
+</div>
+</div>
+
+<div class="wrap">
+<h2 id="theme">2 · Theme: the LED is back</h2>
+<p class="lede">The first Android notification UI was a coloured LED blinking in the dark. Glanceable, colour-coded, silent. One glowing dot per lane on a near-black ground gives the app an icon, a reason to be dark-first, and an indicator that works in the shade, the status bar, a widget and the feed.</p>
+
+<h3>Decisions</h3>
+<ul>
+  <li><b>Dynamic colour off by default.</b> Lane colours are semantic. Offer "Match wallpaper" as an opt-in that recolours only the accent.</li>
+  <li><b>Dark-first, light-complete.</b> Near-black with a cool ink bias and four stepped surfaces. The light theme is warm paper with the same hues at lower chroma, not an inversion. This page is rendered in that palette; switch your theme to compare.</li>
+  <li><b>One accent, amber.</b> The "lamp is on" colour, used for primary actions, the active mode and the batch countdown. Good / warn / critical stay separate from the accent.</li>
+  <li><b>Type.</b> Manrope for UI, DM Mono for times, counts and package names, tabular numerals wherever digits align. Both ship as single variable TTFs.</li>
+  <li><b>Shape.</b> Rows and sheets at 12 dp, chips and the LED pill fully round, one large expressive element per screen. Cards only for the current batch and for suggestions; rows for everything else.</li>
+  <li><b>Material 3 Expressive.</b> Upgrade to material3 1.5.0-beta02 (Expressive is not in 1.4.0 stable) and wrap the app in <code>MaterialExpressiveTheme</code> with the expressive motion scheme: ButtonGroup for the policy picker, SplitButton on the batch card, FloatingToolbar for multi-select in the archive, flexible top app bars on profiles, LoadingIndicator while the listener syncs. Build hierarchy with surface containers, not tonal elevation; Material advises against pure black behind content, so the ground is near-black with an optional true-black setting.</li>
+</ul>
+
+<h3>Palette</h3>
+<div class="swatches">
+  <div class="sw"><div class="chip" style="background:var(--bg)"></div><div class="lbl"><b>Ground</b><span>bg</span></div></div>
+  <div class="sw"><div class="chip" style="background:var(--surf1)"></div><div class="lbl"><b>Surface 1</b><span>rows, nav</span></div></div>
+  <div class="sw"><div class="chip" style="background:var(--surf2)"></div><div class="lbl"><b>Surface 2</b><span>cards</span></div></div>
+  <div class="sw"><div class="chip" style="background:var(--surf3)"></div><div class="lbl"><b>Surface 3</b><span>icons, tracks</span></div></div>
+  <div class="sw"><div class="chip" style="background:var(--accent)"></div><div class="lbl"><b>Accent</b><span>amber, lamp on</span></div></div>
+  <div class="sw"><div class="chip" style="background:var(--fg)"></div><div class="lbl"><b>Text</b><span>fg</span></div></div>
+</div>
+<div class="lane-row">
+  <span class="lane" style="color:var(--people)"><i class="led"></i><span style="color:var(--fg)">People</span></span>
+  <span class="lane" style="color:var(--money)"><i class="led"></i><span style="color:var(--fg)">Money</span></span>
+  <span class="lane" style="color:var(--deliv)"><i class="led"></i><span style="color:var(--fg)">Deliveries</span></span>
+  <span class="lane" style="color:var(--work)"><i class="led"></i><span style="color:var(--fg)">Work</span></span>
+  <span class="lane" style="color:var(--live)"><i class="led"></i><span style="color:var(--fg)">Live</span></span>
+  <span class="lane" style="color:var(--noise)"><i class="led"></i><span style="color:var(--fg)">Noise</span></span>
+</div>
+<p>Six default lane hues, saturated on dark, de-saturated on light. Users can pick any; these keep screenshots and onboarding consistent.</p>
+
+<h3>Type specimen</h3>
+<div class="spec">
+  <div class="cap">Display · Manrope 800</div>
+  <div class="d1">17 interruptions</div>
+  <div class="cap">Title · Manrope 700</div>
+  <div class="d2">Anna · are we still on for lunch?</div>
+  <div class="cap">Body · Manrope 400</div>
+  <div class="b1">Decide once where each sender goes. We hold the rest until you want it.</div>
+  <div class="b2">You dismissed 40 of 42 from Zalando in under 3 seconds.</div>
+  <div class="cap">Data · DM Mono</div>
+  <div class="m1">12:30 · 18:00 · com.zalando.android · 2.4 s median</div>
+</div>
+
+<h2 id="ia">3 · Three tabs, not five</h2>
+<p class="lede">Everything in the app is per app, and everything is a policy. The shell should say so.</p>
+<div class="ia">
+  <div class="col">
+    <div class="tab">Notifications <small>feed + dashboard</small></div>
+    <div class="tab">Screen Time <small>stats + limits</small></div>
+    <div class="tab">Controls <small>presets + context</small></div>
+    <div class="tab">Insights <small>suggestions + stats</small></div>
+    <div class="tab">Settings <small>permissions, data</small></div>
+    <div class="tab hidden-tab">Rules <small>hidden, per pillar</small></div>
+  </div>
+  <div class="arrow">→</div>
+  <div class="col">
+    <div class="tab new">Now <small>stream, batch, undo, search</small></div>
+    <div class="tab new">Apps <small>one profile per app and person</small></div>
+    <div class="tab new">Modes <small>Night, Meeting, Deep Work, Home</small></div>
+    <div class="tab hidden-tab">Settings <small>gear in the Now top bar</small></div>
+  </div>
+</div>
+<ul>
+  <li><b>Now</b> replaces the Notifications tab, the dashboard and history.</li>
+  <li><b>Apps</b> replaces Rules, Insights and screen-time limits. A profile holds the lane, the policy, the stats, the channels, the people, the limit and suggestions for that app.</li>
+  <li><b>Modes</b> replaces Controls and screen-time blocking. A mode bundles sound, DND, lock timeout, which lanes are instant and which apps are blocked, and shows the live context strip.</li>
+</ul>
+</div>
+
+<div class="wide">
+<h2 id="screens" style="text-align:center">4 · The screens</h2>
+<div class="rail">
+  <figure>
+    <div class="phone">
+      <div class="sb"><span>9:41</span><div class="dots"><i></i><i></i><i></i></div></div>
+      <div class="screen">
+        <div class="ctx"><i></i>Office · Walking · Standup in 12 m · Deep Work<span class="gear">⚙</span></div>
+        <div class="hero"><div class="n">17</div><div class="t"><b>interruptions today</b><span>41 held · next batch 12:30</span></div></div>
+        <div class="card">
+          <div class="ledrow"><span style="color:var(--work)"><i class="led"></i>7</span><span style="color:var(--noise)"><i class="led"></i>5</span><span style="color:var(--deliv)"><i class="led"></i>2</span></div>
+          <div class="title">14 held · delivers at 12:30</div>
+          <div class="sub">Slack, Zalando, Gmail, DHL</div>
+          <div class="split"><span>Deliver now</span><span>▾</span></div>
+        </div>
+        <div class="sec">Now</div>
+        <div>
+          <div class="row"><i class="led" style="color:var(--people)"></i><div class="ic av">A</div><div class="tx"><b>Anna</b><span>are we still on for lunch?</span></div><div class="tm">2 m</div></div>
+          <div class="row"><i class="led" style="color:var(--deliv)"></i><div class="ic">DHL</div><div class="tx"><b>DHL · 3 updates</b><span>Out for delivery, arriving 14:00 to 16:00</span></div><div class="tm">18 m</div></div>
+          <div class="row"><i class="led" style="color:var(--money)"></i><div class="ic">N26</div><div class="tx"><b>N26 <span class="tag">code</span></b><span>Your verification code is 48 21 11</span></div><div class="tm">24 m</div></div>
+        </div>
+        <div class="restore"><span>You dismissed 6 in the last hour</span><b>Restore</b></div>
+        <div class="sec">Earlier today</div>
+        <div>
+          <div class="row"><i class="led" style="color:var(--work)"></i><div class="ic">Sl</div><div class="tx"><b>#platform · 7 messages</b><span>Held until 12:30 (Deep Work)</span></div><div class="tm">08:12</div></div>
+          <div class="row dim"><i class="led" style="color:var(--noise)"></i><div class="ic">Za</div><div class="tx"><b>Zalando · 4</b><span>Expired at the 08:00 batch</span></div><div class="tm">07:40</div></div>
+        </div>
+      </div>
+      <div class="nav"><div class="on"><i></i>Now</div><div><i></i>Apps</div><div><i></i>Modes</div></div>
+    </div>
+    <figcaption><b>Now.</b> Context strip, the attention budget as a hero number, the next batch with a split button, then the stream by time with LED dots, icons and bundle rows. Swipe left snoozes to a time, swipe right archives with a 10 s undo, long press opens the Screener.</figcaption>
+  </figure>
+
+  <figure>
+    <div class="phone">
+      <div class="sb"><span>9:41</span><div class="dots"><i></i><i></i><i></i></div></div>
+      <div class="screen">
+        <div class="appbar"><span class="back">←</span><b>Zalando</b></div>
+        <div class="prof"><div class="big">Za</div><div class="t"><b>Zalando</b><span>com.zalando.android · 42 this week</span></div></div>
+        <div class="sec">Lane</div>
+        <div class="chips">
+          <span><i class="led" style="color:var(--people)"></i>People</span><span><i class="led" style="color:var(--money)"></i>Money</span><span><i class="led" style="color:var(--deliv)"></i>Deliveries</span><span><i class="led" style="color:var(--work)"></i>Work</span><span class="on"><i class="led" style="color:var(--noise)"></i>Noise</span>
+        </div>
+        <div class="sec">Delivery</div>
+        <div class="seg"><span>Instant</span><span>Batched</span><span>Quiet</span><span class="on">Digest</span><span>Blocked</span></div>
+        <div class="sec">How you treat it</div>
+        <div class="card">
+          <div class="stats"><div class="ring"><i>92%</i></div><div class="kv"><span>dismissed <b>40 of 42</b></span><span>median time to act <b>2.4 s</b></span><span>opened <b>1</b></span></div></div>
+          <div class="bars"><i style="height:20%"></i><i style="height:10%"></i><i style="height:5%"></i><i style="height:30%"></i><i style="height:55%"></i><i style="height:40%"></i><i class="hi" style="height:100%"></i><i style="height:70%"></i><i style="height:35%"></i><i style="height:25%"></i><i style="height:15%"></i><i style="height:10%"></i></div>
+        </div>
+        <div class="sec">Channels</div>
+        <div>
+          <div class="row" style="grid-template-columns:10px 1fr auto"><i class="led" style="color:var(--noise)"></i><div class="tx"><b>Promotions</b><span>Noise · expire at next batch</span></div><div class="tm">38</div></div>
+          <div class="row" style="grid-template-columns:10px 1fr auto"><i class="led" style="color:var(--deliv)"></i><div class="tx"><b>Orders</b><span>Deliveries · quiet, expire when opened</span></div><div class="tm">4</div></div>
+        </div>
+        <div class="card sugg">
+          <div class="title">Expire promotions at the next batch?</div>
+          <div class="sub">You dismissed 40 of 42 in under 3 seconds.</div>
+          <div class="btns"><span>Do it</span><span class="ghost">Why?</span></div>
+        </div>
+      </div>
+      <div class="nav"><div><i></i>Now</div><div class="on"><i></i>Apps</div><div><i></i>Modes</div></div>
+    </div>
+    <figcaption><b>App profile.</b> Lane, policy, how you actually treat this app, per-channel overrides, and the old suggestion engine rewritten as one re-screening prompt. Conversation apps add a People section with per-person lanes.</figcaption>
+  </figure>
+
+  <figure>
+    <div class="phone">
+      <div class="sb"><span>9:41</span><div class="dots"><i></i><i></i><i></i></div></div>
+      <div class="screen">
+        <div class="appbar"><b>Modes</b></div>
+        <div class="card mode"><div class="t"><b>Deep Work</b><span>SemPKM persona: Work · Calendar: "Focus"</span><p>People instant · everything else held · Instagram and X blocked · DND on · grayscale</p></div><div class="tog on"></div></div>
+        <div class="card mode"><div class="t"><b>Night</b><span>22:00 to 07:00</span><p>Only People from VIPs · alarm volume max · lock after 30 s · held lanes deliver at 07:30</p></div><div class="tog"></div></div>
+        <div class="card mode"><div class="t"><b>Meeting</b><span>Calendar: busy</span><p>Silent · Work and Money breakthrough only · auto-reply after 10 min unseen</p></div><div class="tog"></div></div>
+        <div class="card mode"><div class="t"><b>Home</b><span>WiFi: Casa</span><p>Normal volume · Work batched at 19:00 · nothing blocked</p></div><div class="tog"></div></div>
+        <div class="sec">Context</div>
+        <div class="mini">
+          <div class="ctx"><i></i>Zone Office · Walking · Morning · Standup 10:00, busy</div>
+          <div class="ctx" style="color:var(--faint)"><i style="background:var(--faint);box-shadow:none"></i>Sent to SemPKM 40 s ago · pressure: medium</div>
+        </div>
+        <div class="sec">Screen time</div>
+        <div class="card"><div class="title">2 h 10 m today</div><div class="sub">40 m in blocked apps · 3 pauses taken before opening Instagram</div></div>
+      </div>
+      <div class="nav"><div><i></i>Now</div><div><i></i>Apps</div><div class="on"><i></i>Modes</div></div>
+    </div>
+    <figcaption><b>Modes.</b> Presets become modes with instant lanes and blocked apps. The context strip is the same data the SemPKM bridge sends, with a staleness line. Screen-time enforcement lives here, with a friction option instead of a hard overlay.</figcaption>
+  </figure>
+</div>
+</div>
+
+<div class="wrap">
+<h3>Two notifications the app posts itself</h3>
+<p>Outside the app, the product is visible in exactly two places: the Screener, when a new sender appears, and the batch summary, at delivery time.</p>
+<div class="shade">
+  <div class="notif">
+    <div class="h"><span class="appdot"></span>Doorman · Screener <span class="tm">now</span></div>
+    <div class="ask">New sender: Zalando (Promotions). Where should it go?</div>
+    <div class="chips"><span><i class="led" style="color:var(--people)"></i>People</span><span><i class="led" style="color:var(--money)"></i>Money</span><span><i class="led" style="color:var(--deliv)"></i>Deliveries</span><span><i class="led" style="color:var(--work)"></i>Work</span><span><i class="led" style="color:var(--noise)"></i>Noise</span></div>
+  </div>
+  <div class="notif">
+    <div class="h"><span class="appdot"></span>Doorman · 12:30 batch <span class="tm">12:30</span></div>
+    <div class="ledrow"><span style="color:var(--work)"><i class="led"></i>7 Work</span><span style="color:var(--noise)"><i class="led"></i>5 Noise</span><span style="color:var(--deliv)"><i class="led"></i>2 Deliveries</span></div>
+    <div class="lines">
+      <div><i class="led" style="color:var(--work)"></i><span>#platform: deploy window moved to 15:00 (Jonas)</span></div>
+      <div><i class="led" style="color:var(--deliv)"></i><span>DHL: arriving 14:00 to 16:00</span></div>
+      <div><i class="led" style="color:var(--work)"></i><span>Gmail: Q4 planning doc shared with you</span></div>
+    </div>
+    <div class="acts"><span>Open</span><span>Deliver all</span><span>Keep holding</span></div>
+  </div>
+</div>
+
+<h2 id="model">5 · The notification model</h2>
+<p class="lede">Four parts: lanes, screening, delivery, memory. Each replaces something the app does today with something the user can name.</p>
+
+<div class="flow">
+  <div class="step"><b>Arrives</b><span>Listener stores key, channel, person, icons, actions, intent.</span></div>
+  <div class="step hot"><b>Known sender?</b><span>App + channel, or app + person. If not: the Screener. Until screened, Android category and importance pick a provisional lane.</span></div>
+  <div class="step"><b>Lane</b><span>Colour, policy, decay, sound, breakthrough keywords and people.</span></div>
+  <div class="step hot"><b>Policy</b><span>Instant passes through untouched. The rest are mirrored under the app's own channels.</span></div>
+  <div class="step"><b>Archive</b><span>Every removal, with its reason. Undo, restore, search, keyword pages, digest.</span></div>
+</div>
+
+<h3>Policies</h3>
+<div class="policies">
+  <div><b>Instant</b><span>Original left alone. People, Money, breakthroughs.</span></div>
+  <div><b>Batched</b><span>Held and delivered at set times, or at a breakpoint when the phone is in use.</span></div>
+  <div><b>Quiet</b><span>Delivered now, silently, grouped under the lane.</span></div>
+  <div><b>Digest</b><span>Never shown alone. One line in the next batch summary.</span></div>
+  <div><b>Blocked</b><span>Cancelled and archived. Still searchable, still restorable.</span></div>
+</div>
+
+<h3>Decay instead of dismiss</h3>
+<p>"Auto-dismiss" reads as deletion. Decay reads as intent: promotions expire at the next batch, delivery updates expire when the app is opened, codes expire after ten minutes. The archive keeps all of it.</p>
+
+<h3>Screening: decide once, route forever</h3>
+<p>The first time a new sender appears, nothing is auto-dismissed. One quiet notification asks where it goes; one tap routes that sender forever and re-files its history. This is HEY's Screener for notifications, and it replaces most of the suggestion engine. The heuristics stay, but as re-screening prompts: "You dismissed 40 of 42 from Zalando in under 3 s. Move to Noise?"</p>
+
+<h3>Delivery rules</h3>
+<ul>
+  <li><b>Two or three batches a day</b> per lane by default. The Fitz et al. trial found three predictable batches beat hourly batching and beat silence; silence raised anxiety.</li>
+  <li><b>Bounded deferral.</b> When the phone is unlocked and in use, a batched delivery waits for screen-off, an app switch, or a maximum delay, whichever comes first. A third of notifications arrive mid-task.</li>
+  <li><b>Cooldown per sender.</b> One alert per N minutes; the rest fold into the bundle row.</li>
+  <li><b>Modes override lanes.</b> Deep Work makes Work instant; Night demotes everything but VIP People. Held batches deliver when the mode ends.</li>
+  <li><b>Snooze to a clock time</b>, not a duration.</li>
+  <li><b>Breakthrough.</b> Keywords ("code", "urgent", "delivered"), people and channels bypass any policy.</li>
+</ul>
+
+<h3>Memory: undo, archive, digest</h3>
+<ul>
+  <li>The 10-second undo chip after a swipe, a "Recently dismissed" row, and "Restore batch" on expired bundles. Restored notifications are working mirrors: they open and reply.</li>
+  <li>The archive is the history tab the app already half has: search across title, text, sender, lane, plus saved searches ("Invoice", "OTP") as keyword pages that can become breakthrough rules in one tap.</li>
+  <li>The digest is template text generated on-device with no model: "3 deliveries (DHL, Amazon), 12 promotions expired, 2 messages from Anna held in Work." On-device summarisation can come later and must be labelled.</li>
+</ul>
+
+<h3>The SemPKM bridge</h3>
+<p>Phone to SemPKM: <code>POST /api/context/update</code> with zone, activity, time period, calendar event and busy flag, device id, plus two fields SemPKM does not have yet: <code>focus_mode</code> and <code>notification_pressure</code>. SemPKM to phone: register as a device and receive persona switches and rule notifications into a SemPKM lane; a persona switch can activate a mode. The bridge is its own Gradle module, the only one holding INTERNET, off until an instance URL and key are entered, and it never sends notification content. PROJECT.md's "no internet permission" rule needs rewriting to "nothing leaves the device except context, to your own instance".</p>
+
+<h2 id="research">6 · What we borrow</h2>
+<div class="tablewrap"><table>
+  <thead><tr><th>Source</th><th>Mechanic</th><th>We take</th></tr></thead>
+  <tbody>
+    <tr><td>BuzzKill</td><td>Rules as app + condition + action; cooldown; batch with Expand; keyword exception that breaks through; snooze to a time; 10 s undo; auto-reply if unseen.</td><td>Breakthrough keywords, snooze-to-time, cooldown, undo window.</td></tr>
+    <tr><td>Daywise</td><td>Holds everything and releases at "notification breaks"; Instant / Batched / VIP; built on the Fitz study. Maintenance status unverified.</td><td>The three-tier default and two batches a day.</td></tr>
+    <tr><td>FilterBox</td><td>Offline spam classifier; escalation to a call-style alert; webhook egress; searchable history with restore.</td><td>Escalation ladder; webhook idea for the bridge.</td></tr>
+    <tr><td>Pixel Notification Organizer (Android 16 QPR2)</td><td>On-device classification by content into Promotions, News, Social, Suggested, delivered silently. Pixel 9+ only.</td><td>Content-based default lanes with silent delivery, on every phone, user-editable.</td></tr>
+    <tr><td>Live Updates, Now Bar, dynamicSpot</td><td>A separate ambient surface for ongoing state.</td><td>The Live lane and strip; our own ProgressStyle summaries where supported.</td></tr>
+    <tr><td>HEY</td><td>Screener: decide once per sender, route forever to Imbox, Feed, Paper Trail; notifications opt-in per thread.</td><td>Screening as the onboarding of every sender; per-person routing.</td></tr>
+    <tr><td>Superhuman, Shortwave</td><td>User-authored splits; bundles collapsing one sender into a row with bulk actions.</td><td>Lanes are user-authored; bundle rows in the stream.</td></tr>
+    <tr><td>Gmail categories</td><td>Only Primary alerts; the category is the policy.</td><td>A lane's policy is the only thing that decides whether anything alerts.</td></tr>
+    <tr><td>Beeper Low Priority</td><td>Hidden and silent except mentions and direct replies.</td><td>Breakthrough-by-mention inside People.</td></tr>
+    <tr><td>iOS Scheduled Summary, Priority</td><td>Digest at chosen times; urgent items lifted.</td><td>The batch summary layout and digest template.</td></tr>
+    <tr><td>Unpluq, one sec, ClearSpace</td><td>Friction at the moment of acting: NFC tag, breathing pause, a walk.</td><td>Modes can require a pause before a blocked app opens, replacing the hard overlay for most people.</td></tr>
+    <tr><td>Fitz et al. 2019; Pielot et al. 2014, 2017, 2018; Gluck 2007; Horvitz</td><td>Three batches beat hourly and beat silence; messaging converts 64 %, promos 16 %; a third arrive mid-task; match draw to utility; bounded deferral.</td><td>Defaults, breakpoints, messaging Instant by default, never ship "all silent".</td></tr>
+  </tbody>
+</table></div>
+<ul class="srcs">
+  <li>Fitz, Kushlev, Jagannathan, Lewis, Paliwal, Ariely (2019), Computers in Human Behavior. <a href="https://communities.springernature.com/posts/batching-notifications-can-improve-attention-well-being-and-productivity">Summary</a></li>
+  <li>Pielot, Vradi, Park (2018), "Dismissed!", MobileHCI. <a href="https://www.interruptions.net/literature/Pielot-MobileHCI18.pdf">PDF</a></li>
+  <li>BuzzKill coverage: <a href="https://www.computerworld.com/article/4130176/android-notification-enhancements.html">Computerworld</a>, <a href="https://www.androidauthority.com/manage-android-notifications-buzzkill-3543478">Android Authority</a></li>
+  <li>Pixel Notification Organizer: <a href="https://9to5google.com/2025/12/09/google-pixel-notification-organizer/">9to5Google</a></li>
+  <li>HEY: <a href="https://www.hey.com/how-it-works/">How it works</a> · Beeper: <a href="https://help.beeper.com/en_US/android/beeper-android-how-does-inbox-work">Inbox</a></li>
+</ul>
+
+<h2 id="feasibility">7 · What a listener can do</h2>
+<p class="lede">The whole model stands on one technical commitment: for non-Instant lanes, cancel the original and re-post a mirror under the app's own channels. Here is what the platform allows.</p>
+<div class="feas" id="feas-grid">
+  <div class="ok"><b>Read everything</b>Ranking gives channel, importance, conversation flag and shortcut; extras give messages, people, picture, inbox lines; small and large icons load cross-package; actions carry RemoteInputs; contentIntent is readable.</div>
+  <div class="ok"><b>Cancel, snooze, sync</b>cancelNotification, snoozeNotification(key, ms) with the system re-posting it, getActiveNotifications on connect, setNotificationsShown. A listener cancel is silently ignored for ongoing and foreground-service notifications, so the Live lane always passes through.</div>
+  <div class="ok"><b>Mirror a notification</b>Notification.Builder.recoverBuilder keeps the intent, actions, RemoteInputs, messaging content and large icon. Set our channel, lane colour and group, the original app icon as large icon and its label as sub-text. Cancel the original first.</div>
+  <div class="ok"><b>Open from a mirror</b>A tap on the mirror is sent by SystemUI, exempt from background-launch rules. From our own Activity, targeting 34+, pass ActivityOptions with background-start allowed. From a service it is blocked.</div>
+  <div class="ok"><b>Modes with device effects</b>Android 15 AutomaticZenRule with type, icon, trigger text and ZenDeviceEffects (grayscale, dim wallpaper). Needs DND access, which the app already asks for. Modes show up in system Settings.</div>
+  <div class="mid"><b>Reply from a mirror</b>Works when the app made its reply intent mutable, as Google's guidance says it should. Immutable ones deliver an empty reply. Test per messaging app; fall back to opening the conversation.</div>
+  <div class="mid"><b>Undo a dismissal</b>Nothing restores the original. Snooze instead of cancel when the user is likely to want it back; otherwise restore a mirror from the stored parcel.</div>
+  <div class="mid"><b>Colour, group, order, silence</b>Only on our mirrors. The header shows our app name. Making an original silent after the fact is impossible; cancel and re-post on a low-importance channel.</div>
+  <div class="no"><b>Re-rank or re-classify the shade</b>NotificationAssistantService is system-only, one per device. Pixel's Notification Organizer and Gemini summaries cannot be hooked. On Android 16 QPR1 a listener probably sees bundled items under reserved channel ids, usable as lane hints.</div>
+  <div class="no"><b>Notification cooldown</b>No developer API. Approximate per sender with our own cooldown; the ranking says when the system last alerted.</div>
+</div>
+<p id="feas-note" class="srcs">To test on a device before Phase E: snoozing foreground-service notifications, channel ids of bundled notifications on Pixel, and reply mutability across WhatsApp, Signal, Telegram, Slack and Gmail. The full API table is section 4 of the written review in the repository.</p>
+
+<h2 id="roadmap">8 · Roadmap</h2>
+<ol class="phases">
+  <li class="pre"><i>A</i><div><b>Listener foundation</b><span>Store key, channel, importance, conversation, person, icons, actions, RemoteInputs, contentIntent. Match removals by key with reason. Ongoing as live state. Sync on connect. De-duplicate updates. Room v4.</span></div></li>
+  <li><i>B</i><div><b>Theme and shell</b><span>material3 1.5.0-beta02, MaterialExpressiveTheme, static palette, type, LED motif, three-tab shell with existing screens re-homed. Layout-only regression surface.</span></div></li>
+  <li><i>C</i><div><b>Now v1</b><span>Stream with icons, read-only lanes from category and channel, time sections, swipe archive with undo, search, recently dismissed.</span></div></li>
+  <li><i>D</i><div><b>Screener and Apps</b><span>Editable lanes, the Screener, per-sender routing, the app profile replacing Rules and Insights, suggestions as re-screening prompts.</span></div></li>
+  <li><i>E</i><div><b>Delivery</b><span>Mirroring, batch times, bounded deferral, cooldown, snooze-to-time, batch summary, decay. The phase where the app changes the phone instead of reporting on it.</span></div></li>
+  <li><i>F</i><div><b>Modes</b><span>Presets become modes with instant lanes and blocked apps; screen-time enforcement moves in; friction options.</span></div></li>
+  <li><i>G</i><div><b>SemPKM bridge</b><span>service-bridge module, context push, device registration, SemPKM lane, persona-to-mode mapping. Needs two new SemPKM fields and the privacy rewrite.</span></div></li>
+</ol>
+
+<h2 id="decisions">9 · Decisions for the owner</h2>
+<ol>
+  <li>Rename or keep "Usage Control". The mocks use "Doorman" as a placeholder.</li>
+  <li>Accept the privacy rewrite for the SemPKM bridge, or keep this app offline and let the Expo app remain the Android context provider.</li>
+  <li>Accept the mirroring trade-off for non-Instant lanes before Phase E.</li>
+  <li>Default lanes and batch times for first run.</li>
+</ol>
+
+<footer>Review written against commit a01bda9 on claude/epic-meitner-c0lu8j · mock data throughout is illustrative</footer>
+</div>
