@@ -405,12 +405,13 @@ SemPKM lane, persona-to-mode mapping. Needs the SemPKM-side fields `focus_mode` 
 
 ---
 
-## 7. Decisions needed from the owner
+## 7. Decisions (resolved 2026-11-03)
 
-1. Rename or keep "Usage Control".
-2. Accept the privacy rewrite for the SemPKM bridge, or keep the app offline and let the
-   Expo app remain the Android context provider.
-3. Mirroring trade-off: for Batched, Quiet and Digest lanes the shade shows *our* app's icon
-   with the original app's icon as the large icon. Instant lanes stay untouched. Confirm this
-   is acceptable before Phase E.
-4. Default lanes and batch times for first run.
+1. **Name: Doorman.** `applicationId` stays `com.usagecontrol`; packages are not renamed.
+2. **Privacy rewrite accepted.** The bridge module is the only holder of INTERNET, off until an
+   instance is configured, and never sends notification content.
+3. **Mirroring trade-off accepted** for Batched, Quiet, Digest and Blocked lanes.
+4. Default lanes and batch times: decided during Phase 8 discussion (see
+   `DOORMAN-MILESTONES.md`).
+
+The phase, plan and task breakdown lives in `.planning/research/DOORMAN-MILESTONES.md`.
