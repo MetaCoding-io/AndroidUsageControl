@@ -1,7 +1,12 @@
 package com.usagecontrol.service.context
 
+import com.usagecontrol.core.common.SoundProfileApplier
 import com.usagecontrol.core.model.ActionType
 import com.usagecontrol.core.rules.ActionExecutor
+import dagger.Binds
+import dagger.Module
+import dagger.hilt.InstallIn
+import dagger.hilt.components.SingletonComponent
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -43,4 +48,12 @@ class ActionHandlerRegistrar @Inject constructor(
             lockControlExecutor.setLockTimeout(timeoutMs)
         }
     }
+}
+
+/** Binds the Modes-tab [SoundProfileApplier] bridge to its service-context implementation. */
+@Module
+@InstallIn(SingletonComponent::class)
+abstract class SoundProfileApplierModule {
+    @Binds
+    abstract fun bindSoundProfileApplier(impl: SoundProfileApplierImpl): SoundProfileApplier
 }

@@ -37,4 +37,6 @@ dependencies {
     implementation(libs.lifecycle.viewmodel.compose)
     implementation(libs.lifecycle.runtime.compose)
     implementation(libs.coroutines.core)
+
+    testImplementation(libs.junit)
 }

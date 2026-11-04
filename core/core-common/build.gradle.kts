@@ -15,6 +15,7 @@ android {
 }
 
 dependencies {
+    implementation(project(":core:core-model"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.coroutines.core)
     implementation(libs.coroutines.android)

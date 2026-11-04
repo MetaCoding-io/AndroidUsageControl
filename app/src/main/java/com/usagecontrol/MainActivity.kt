@@ -28,6 +28,7 @@ import androidx.navigation.navArgument
 import com.usagecontrol.core.ui.theme.DoormanTheme
 import com.usagecontrol.feature.learning.LearningScreen
 import com.usagecontrol.feature.lockcontrol.LockControlScreen
+import com.usagecontrol.feature.lockcontrol.modes.ModesScreen
 import com.usagecontrol.feature.notifications.NowScreen
 import com.usagecontrol.feature.notifications.apps.AppProfileScreen
 import com.usagecontrol.feature.notifications.apps.AppsScreen
@@ -41,7 +42,6 @@ import com.usagecontrol.feature.screentime.ScreenTimeScreen
 import com.usagecontrol.feature.settings.SettingsScreen
 import com.usagecontrol.navigation.AppRoutes
 import com.usagecontrol.navigation.AppScreen
-import com.usagecontrol.navigation.ModesPlaceholderScreen
 import com.usagecontrol.service.context.ContextMonitorService
 import com.usagecontrol.service.usage.UsageMonitorService
 import dagger.hilt.android.AndroidEntryPoint
@@ -190,7 +190,7 @@ fun UsageControlAppContent(
                         onOpenApp = { pkg -> navController.navigate(AppRoutes.appProfile(pkg)) },
                     )
                 }
-                composable(AppScreen.MODES.route) { ModesPlaceholderScreen() }
+                composable(AppScreen.MODES.route) { ModesScreen() }
 
                 // Off-bar routes: still reachable by navigation, never shown in the bottom bar
                 composable(AppRoutes.SCREEN_TIME) {
