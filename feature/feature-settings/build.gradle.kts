@@ -21,6 +21,7 @@ dependencies {
     implementation(project(":core:core-model"))
     implementation(project(":core:core-database"))
     implementation(project(":core:core-ui"))
+    implementation(project(":service:service-notification"))
 
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)

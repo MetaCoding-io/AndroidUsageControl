@@ -12,11 +12,14 @@ import com.usagecontrol.core.database.dao.ContextSnapshotDao
 import com.usagecontrol.core.database.dao.NotificationDao
 import com.usagecontrol.core.database.dao.RuleDao
 import com.usagecontrol.core.database.dao.UsageDao
+import com.usagecontrol.service.notification.IconStore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
@@ -27,6 +30,7 @@ class SettingsViewModel @Inject constructor(
     private val usageDao: UsageDao,
     private val contextSnapshotDao: ContextSnapshotDao,
     private val ruleDao: RuleDao,
+    private val iconStore: IconStore,
 ) : ViewModel() {
 
     private val prefs: SharedPreferences =
@@ -77,6 +81,8 @@ class SettingsViewModel @Inject constructor(
             val notifDeleted = notificationDao.deleteOlderThan(cutoff)
             val usageDeleted = usageDao.deleteOlderThan(cutoffDate)
             val contextDeleted = contextSnapshotDao.deleteOlderThan(cutoff)
+            val referencedIcons = notificationDao.getAllIconPaths().toSet()
+            withContext(Dispatchers.IO) { iconStore.pruneUnreferenced(referencedIcons) }
 
             _cleanupResult.value = "Cleaned up: $notifDeleted notifications, $usageDeleted usage records, $contextDeleted snapshots"
             refreshCounts()

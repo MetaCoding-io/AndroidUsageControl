@@ -59,6 +59,14 @@ interface NotificationDao {
     @Query("SELECT COUNT(*) FROM notifications")
     suspend fun getCount(): Int
 
+    /** Every icon path still referenced by history or live rows; used to prune the on-disk icon store. */
+    @Query("""
+        SELECT smallIconPath FROM notifications WHERE smallIconPath IS NOT NULL
+        UNION SELECT largeIconPath FROM notifications WHERE largeIconPath IS NOT NULL
+        UNION SELECT smallIconPath FROM live_notifications WHERE smallIconPath IS NOT NULL
+    """)
+    suspend fun getAllIconPaths(): List<String>
+
     // -- v4 key identity --
 
     /** Id of the live (not yet removed) history row for this StatusBarNotification key. */

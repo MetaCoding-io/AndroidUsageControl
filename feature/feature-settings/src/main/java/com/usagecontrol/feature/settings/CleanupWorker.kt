@@ -9,6 +9,7 @@ import com.usagecontrol.core.database.dao.ContextSnapshotDao
 import com.usagecontrol.core.database.dao.NotificationDao
 import com.usagecontrol.core.database.dao.SuggestionDao
 import com.usagecontrol.core.database.dao.UsageDao
+import com.usagecontrol.service.notification.IconStore
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 
@@ -24,6 +25,7 @@ class CleanupWorker @AssistedInject constructor(
     private val usageDao: UsageDao,
     private val contextSnapshotDao: ContextSnapshotDao,
     private val suggestionDao: SuggestionDao,
+    private val iconStore: IconStore,
 ) : CoroutineWorker(appContext, workerParams) {
 
     override suspend fun doWork(): Result {
@@ -36,6 +38,7 @@ class CleanupWorker @AssistedInject constructor(
         usageDao.deleteOlderThan(cutoffDate)
         contextSnapshotDao.deleteOlderThan(cutoff)
         suggestionDao.deleteResolved(cutoff)
+        iconStore.pruneUnreferenced(notificationDao.getAllIconPaths().toSet())
 
         return Result.success()
     }
