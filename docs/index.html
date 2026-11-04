@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Doorman — a doorman for your notifications</title>
+<meta name="description" content="Doorman (AndroidUsageControl) is a privacy-first Android app that lets the right notifications through, holds the rest until you ask, and remembers everyone who came by.">
+<meta name="color-scheme" content="dark light">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230E1116'/%3E%3Ccircle cx='16' cy='16' r='7' fill='%23F5B544'/%3E%3C/svg%3E">
+<style>
+:root {
+  --bg:#0E1116; --surf1:#151A21; --surf2:#1C222B; --line:#2A3340;
+  --fg:#E8ECF1; --muted:#98A3B1; --faint:#5F6B79;
+  --accent:#F5B544; --on-accent:#1A1200; --accent-soft:rgba(245,181,68,.14);
+  --people:#FF6B5B; --money:#3DDC84; --deliv:#38BDF8; --work:#A78BFA; --live:#F472B6; --noise:#6B7A8C;
+  --font-ui:"Manrope","Segoe UI",system-ui,sans-serif;
+  --font-mono:"DM Mono","SFMono-Regular",Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg:#F6F3EC; --surf1:#FFFFFF; --surf2:#EFEBE2; --line:#D9D3C6;
+    --fg:#1A1C1F; --muted:#5C6570; --faint:#8A9199;
+    --accent:#B9780A; --on-accent:#FFFFFF; --accent-soft:rgba(185,120,10,.12);
+    --people:#D14A3A; --money:#1D9A5B; --deliv:#0E7FB0; --work:#6F55C9; --live:#C23F85; --noise:#6B7580;
+    color-scheme:light;
+  }
+}
+:root[data-theme="light"] {
+  --bg:#F6F3EC; --surf1:#FFFFFF; --surf2:#EFEBE2; --line:#D9D3C6;
+  --fg:#1A1C1F; --muted:#5C6570; --faint:#8A9199;
+  --accent:#B9780A; --on-accent:#FFFFFF; --accent-soft:rgba(185,120,10,.12);
+  --people:#D14A3A; --money:#1D9A5B; --deliv:#0E7FB0; --work:#6F55C9; --live:#C23F85; --noise:#6B7580;
+  color-scheme:light;
+}
+* { box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { margin:0; background:var(--bg); color:var(--fg); font-family:var(--font-ui); font-size:16px; line-height:1.6;
+  padding-inline:max(16px, env(safe-area-inset-left)); }
+a { color:var(--accent); text-underline-offset:3px; }
+img { max-width:100%; height:auto; display:block; }
+.wrap { max-width:1080px; margin:0 auto; }
+h1,h2,h3 { line-height:1.12; margin:0; text-wrap:balance; }
+h1 { font-size:clamp(38px,7vw,68px); font-weight:800; letter-spacing:-.03em; }
+h2 { font-size:clamp(26px,4vw,38px); font-weight:800; letter-spacing:-.02em; }
+h3 { font-size:18px; font-weight:700; }
+p { margin:0 0 14px; }
+.mono { font-family:var(--font-mono); }
+.eyebrow { font-family:var(--font-mono); font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted);
+  display:flex; align-items:center; gap:8px; }
+.led { display:inline-block; width:10px; height:10px; border-radius:50%; background:currentColor; box-shadow:0 0 10px currentColor; flex-shrink:0; }
+.eyebrow .led { color:var(--accent); }
+
+nav.top { display:flex; justify-content:space-between; align-items:center; gap:16px; padding-block:20px; }
+nav.top .brand { display:flex; align-items:center; gap:10px; font-weight:800; font-size:18px; color:var(--fg); text-decoration:none; }
+nav.top .brand .led { color:var(--accent); width:14px; height:14px; }
+nav.top .links { display:flex; gap:20px; align-items:center; font-size:14px; }
+nav.top .links a { color:var(--muted); text-decoration:none; }
+nav.top .links a:hover { color:var(--fg); }
+@media (max-width:640px){ nav.top .links a.hide-s { display:none; } }
+.btn { display:inline-flex; align-items:center; gap:8px; padding:12px 22px; border-radius:999px; font-weight:700; font-size:15px; text-decoration:none;
+  background:var(--accent); color:var(--on-accent); }
+.btn.ghost { background:transparent; color:var(--fg); border:1px solid var(--line); }
+.btn:hover { filter:brightness(1.08); }
+
+.hero { display:grid; grid-template-columns:1.1fr .9fr; gap:48px; align-items:center; padding-block:48px 80px; }
+.hero p.lede { font-size:clamp(17px,2.2vw,20px); color:var(--muted); max-width:52ch; margin-top:22px; }
+.hero .cta { display:flex; flex-wrap:wrap; gap:12px; margin-top:28px; }
+.hero .shot { display:flex; justify-content:center; position:relative; }
+.hero .shot::before { content:""; position:absolute; inset:10% 5%; background:radial-gradient(closest-side, var(--accent-soft), transparent); filter:blur(30px); z-index:0; }
+.hero .shot picture { position:relative; z-index:1; width:min(300px,100%); filter:drop-shadow(0 24px 40px rgba(0,0,0,.35)); }
+.accent { color:var(--accent); }
+@media (max-width:820px){ .hero { grid-template-columns:1fr; gap:40px; padding-block:24px 56px; } }
+
+.lanes { display:flex; flex-wrap:wrap; gap:10px 22px; margin-top:26px; font-size:14px; }
+.lanes span { display:inline-flex; align-items:center; gap:8px; }
+
+section { padding-block:72px; border-top:1px solid var(--line); }
+section > .wrap > .eyebrow { margin-bottom:14px; }
+section p.lede { color:var(--muted); max-width:62ch; font-size:18px; margin-top:14px; }
+
+.grid3 { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:16px; margin-top:36px; }
+.card { background:var(--surf1); border:1px solid var(--line); border-radius:16px; padding:22px; }
+.card h3 { margin-bottom:8px; display:flex; align-items:center; gap:10px; }
+.card p { color:var(--muted); font-size:15px; margin:0; }
+.card .n { font-family:var(--font-mono); color:var(--accent); font-size:13px; }
+
+.policies { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; margin-top:32px; }
+.policies div { padding:14px 16px; border:1px solid var(--line); border-radius:12px; background:var(--surf1); font-size:14px; color:var(--muted); }
+.policies b { display:block; color:var(--fg); margin-bottom:4px; font-size:15px; }
+
+.showcase { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:36px 28px; margin-top:44px; justify-items:center; }
+.showcase figure { margin:0; max-width:300px; }
+.showcase figcaption { margin-top:16px; color:var(--muted); font-size:14.5px; }
+.showcase figcaption b { color:var(--fg); display:block; font-size:16px; margin-bottom:2px; }
+.showcase img { filter:drop-shadow(0 18px 30px rgba(0,0,0,.28)); }
+.shade { margin-top:56px; display:grid; grid-template-columns:1fr 1fr; gap:36px; align-items:center; }
+.shade img { border-radius:16px; border:1px solid var(--line); }
+@media (max-width:820px){ .shade { grid-template-columns:1fr; } }
+
+.privacy { display:grid; grid-template-columns:1fr 1fr; gap:48px; align-items:start; }
+@media (max-width:820px){ .privacy { grid-template-columns:1fr; gap:24px; } }
+ul.tick { list-style:none; padding:0; margin:0; display:grid; gap:12px; }
+ul.tick li { padding-left:30px; position:relative; color:var(--muted); }
+ul.tick li b { color:var(--fg); }
+ul.tick li::before { content:""; position:absolute; left:4px; top:.55em; width:10px; height:10px; border-radius:50%; background:var(--money); box-shadow:0 0 8px var(--money); }
+
+.roadmap { display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:16px; margin-top:36px; }
+.roadmap .card .tagline { font-family:var(--font-mono); font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
+.roadmap .card.done { border-color:var(--money); }
+.roadmap .card.next { border-color:var(--accent); }
+.roadmap ul { margin:12px 0 0; padding-left:18px; color:var(--muted); font-size:14.5px; }
+
+.note { margin-top:36px; padding:14px 18px; border-left:3px solid var(--accent); background:var(--accent-soft); border-radius:0 10px 10px 0; font-size:14.5px; color:var(--muted); max-width:72ch; }
+pre { background:var(--surf1); border:1px solid var(--line); border-radius:12px; padding:16px 18px; overflow-x:auto; font-family:var(--font-mono); font-size:13.5px; margin:18px 0 0; }
+
+footer { border-top:1px solid var(--line); padding-block:36px 56px; color:var(--muted); font-size:14px; display:flex; flex-wrap:wrap; gap:12px 28px; justify-content:space-between; }
+footer a { color:var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="top">
+    <a class="brand" href="#top"><span class="led"></span>Doorman</a>
+    <div class="links">
+      <a class="hide-s" href="#how">How it works</a>
+      <a class="hide-s" href="#screens">Screens</a>
+      <a class="hide-s" href="#privacy">Privacy</a>
+      <a class="hide-s" href="#roadmap">Roadmap</a>
+      <a href="https://github.com/MetaCoding-io/AndroidUsageControl">GitHub</a>
+    </div>
+  </nav>
+
+  <header class="hero" id="top">
+    <div>
+      <div class="eyebrow"><span class="led"></span>Android · Open source · On-device</div>
+      <h1 style="margin-top:18px">A doorman for <span class="accent">your notifications</span>.</h1>
+      <p class="lede">Doorman stands between the world and you. It lets the right notifications through immediately, holds the rest until you ask, and remembers everyone who came by.</p>
+      <div class="cta">
+        <a class="btn" href="https://github.com/MetaCoding-io/AndroidUsageControl">View on GitHub</a>
+        <a class="btn ghost" href="#screens">See the screens</a>
+      </div>
+      <div class="lanes" aria-label="Notification lanes">
+        <span><i class="led" style="color:var(--people)"></i>People</span>
+        <span><i class="led" style="color:var(--money)"></i>Money</span>
+        <span><i class="led" style="color:var(--deliv)"></i>Deliveries</span>
+        <span><i class="led" style="color:var(--work)"></i>Work</span>
+        <span><i class="led" style="color:var(--live)"></i>Live</span>
+        <span><i class="led" style="color:var(--noise)"></i>Noise</span>
+      </div>
+    </div>
+    <div class="shot">
+      <picture>
+        <source srcset="img/now-light.png" media="(prefers-color-scheme: light)">
+        <img src="img/now-dark.png" width="602" height="1362" alt="Doorman's Now tab: 17 interruptions today, 14 held until the 12:30 batch, and a stream of colour-coded notifications.">
+      </picture>
+    </div>
+  </header>
+</div>
+
+<section id="how">
+  <div class="wrap">
+    <div class="eyebrow"><span class="led"></span>How it works</div>
+    <h2>Decide once. Route forever.</h2>
+    <p class="lede">Every notification belongs to a lane. Lanes have a colour, a delivery policy and a decay rule, so your phone stops treating a delivery update like a message from your partner.</p>
+
+    <div class="grid3">
+      <div class="card"><h3><span class="n">01</span>Lanes</h3><p>User-defined buckets with a colour and a delivery policy. A LED-dot motif makes the lane readable at a glance, anywhere in the app.</p></div>
+      <div class="card"><h3><span class="n">02</span>Screening</h3><p>The first time a new sender shows up, Doorman asks where it should go. One answer, routed forever. Keyword exceptions can still punch through.</p></div>
+      <div class="card"><h3><span class="n">03</span>Delivery</h3><p>Held lanes are batched at times you choose, with bounded deferral so nothing waits forever. Instant lanes are never touched.</p></div>
+      <div class="card"><h3><span class="n">04</span>Memory</h3><p>Nothing is lost. Every removal is archived with a reason, with undo, restore, search and keyword pages.</p></div>
+      <div class="card"><h3><span class="n">05</span>Modes</h3><p>Presets such as Deep Work, Night, Meeting and Home change lanes, block distracting apps with friction instead of walls, and set sound and Do Not Disturb.</p></div>
+      <div class="card"><h3><span class="n">06</span>Screen time</h3><p>Per-app limits with advisory, soft and hard enforcement, so a pause before opening an app is a choice you made.</p></div>
+    </div>
+
+    <div class="policies" aria-label="Delivery policies">
+      <div><b>Instant</b>Straight through, untouched.</div>
+      <div><b>Batched</b>Held, delivered at set times.</div>
+      <div><b>Quiet</b>Silent, visible when you look.</div>
+      <div><b>Digest</b>Summarised into one notification.</div>
+      <div><b>Blocked</b>Archived, never shown.</div>
+    </div>
+  </div>
+</section>
+
+<section id="screens">
+  <div class="wrap">
+    <div class="eyebrow"><span class="led"></span>The screens</div>
+    <h2>Three tabs. One idea.</h2>
+    <p class="lede">Everything in Doorman is per app, and everything is a policy. The shell reflects that: Now, Apps and Modes, with Settings behind a gear.</p>
+
+    <div class="showcase">
+      <figure>
+        <picture>
+          <source srcset="img/now-light.png" media="(prefers-color-scheme: light)">
+          <img loading="lazy" src="img/now-dark.png" width="602" height="1362" alt="The Now tab with a context strip, interruption count, next batch and notification stream.">
+        </picture>
+        <figcaption><b>Now</b>Context strip, today's attention budget as a hero number, the next batch with a split button, then the stream by time. Swipe to snooze or archive with undo.</figcaption>
+      </figure>
+      <figure>
+        <picture>
+          <source srcset="img/app-light.png" media="(prefers-color-scheme: light)">
+          <img loading="lazy" src="img/app-dark.png" width="602" height="1362" alt="An app profile for Zalando showing lane, delivery policy, dismissal stats and a suggestion.">
+        </picture>
+        <figcaption><b>App profile</b>Lane, policy, and how you actually treat this app. The suggestion engine becomes one plain prompt: "Expire promotions at the next batch?"</figcaption>
+      </figure>
+      <figure>
+        <picture>
+          <source srcset="img/modes-light.png" media="(prefers-color-scheme: light)">
+          <img loading="lazy" src="img/modes-dark.png" width="602" height="1362" alt="The Modes tab with Deep Work, Night, Meeting and Home modes, plus context and screen time.">
+        </picture>
+        <figcaption><b>Modes</b>Deep Work, Night, Meeting, Home. Each one sets lanes, blocked apps and sound. Screen-time enforcement lives here.</figcaption>
+      </figure>
+    </div>
+
+    <div class="shade">
+      <picture>
+        <source srcset="img/notifications-light.png" media="(prefers-color-scheme: light)">
+        <img loading="lazy" src="img/notifications-dark.png" width="840" height="572" alt="Two Doorman notifications: the Screener asking where a new sender should go, and a 12:30 batch summary.">
+      </picture>
+      <div>
+        <h3 style="font-size:24px">Only two things reach the shade.</h3>
+        <p style="color:var(--muted);margin-top:12px">Outside the app, Doorman shows up in exactly two places: the <b style="color:var(--fg)">Screener</b>, when a new sender appears, and the <b style="color:var(--fg)">batch summary</b>, at delivery time. That's the whole interface to the world.</p>
+      </div>
+    </div>
+
+    <p class="note">These are design previews rendered from the project's redesign review (<a href="https://github.com/MetaCoding-io/AndroidUsageControl/blob/main/.planning/research/DESIGN-REVIEW.md">in the repo</a>), not captures from a device. They show where v0.3 is heading; the current build is v0.2.</p>
+  </div>
+</section>
+
+<section id="privacy">
+  <div class="wrap privacy">
+    <div>
+      <div class="eyebrow"><span class="led"></span>Privacy</div>
+      <h2 style="margin-top:14px">Your notifications stay yours.</h2>
+      <p class="lede">Built for personal use first. Everything is stored on the device, and notification content never leaves it.</p>
+    </div>
+    <ul class="tick" style="margin-top:6px">
+      <li><b>On-device by default.</b> Notifications, rules and habits live in a local Room database.</li>
+      <li><b>No cloud, no accounts.</b> No analytics, no ads, no sign-up.</li>
+      <li><b>Opt-in context bridge.</b> If you run your own SemPKM instance, Doorman can send it context (zone, mode, focus). Never notification content. It's off until you turn it on.</li>
+      <li><b>Open source.</b> Read exactly what the listener does.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="roadmap">
+  <div class="wrap">
+    <div class="eyebrow"><span class="led"></span>Roadmap</div>
+    <h2>Where it is, where it's going.</h2>
+    <div class="roadmap">
+      <div class="card done">
+        <div class="tagline">Shipped · v0.2</div>
+        <h3>Foundations</h3>
+        <ul><li>Notification capture and history</li><li>Dismissal rules and screen-time limits</li><li>Welcome tour and quick setup</li></ul>
+      </div>
+      <div class="card next">
+        <div class="tagline">Next · v0.3</div>
+        <h3>Doorman</h3>
+        <ul><li>New name, theme and three-tab shell</li><li>Icons, lane dots, time sections</li><li>Undo, search and open original</li></ul>
+      </div>
+      <div class="card">
+        <div class="tagline">Planned · v0.4</div>
+        <h3>Lanes</h3>
+        <ul><li>Editable lanes and sender screening</li><li>Mirrored delivery and timed batches</li><li>Searchable archive and keyword pages</li></ul>
+      </div>
+      <div class="card">
+        <div class="tagline">Planned · v0.5</div>
+        <h3>Modes and bridge</h3>
+        <ul><li>Modes with friction-based blocking</li><li>Opt-in SemPKM context bridge</li></ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="build">
+  <div class="wrap">
+    <div class="eyebrow"><span class="led"></span>Build it</div>
+    <h2>Run it on your phone.</h2>
+    <p class="lede">Doorman is not on an app store yet. Build the debug APK from source and sideload it. You'll need JDK 17 and the Android SDK; the README walks through setup, including a Docker build.</p>
+<pre>git clone https://github.com/MetaCoding-io/AndroidUsageControl
+cd AndroidUsageControl
+./gradlew assembleDebug</pre>
+    <p style="margin-top:22px"><a class="btn ghost" href="https://github.com/MetaCoding-io/AndroidUsageControl#readme">Read the full setup guide</a></p>
+  </div>
+</section>
+
+<div class="wrap">
+  <footer>
+    <span><b style="color:var(--fg)">Doorman</b> · a MetaCoding project · Kotlin, Jetpack Compose, Material 3</span>
+    <span><a href="https://github.com/MetaCoding-io/AndroidUsageControl">Source</a> · <a href="https://github.com/MetaCoding-io/AndroidUsageControl/issues">Issues</a></span>
+  </footer>
+</div>
+</body>
+</html>
