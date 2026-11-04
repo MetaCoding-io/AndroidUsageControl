@@ -28,7 +28,7 @@ import androidx.navigation.navArgument
 import com.usagecontrol.core.ui.theme.DoormanTheme
 import com.usagecontrol.feature.learning.LearningScreen
 import com.usagecontrol.feature.lockcontrol.LockControlScreen
-import com.usagecontrol.feature.notifications.NotificationsScreen
+import com.usagecontrol.feature.notifications.NowScreen
 import com.usagecontrol.feature.onboarding.FeatureTourScreen
 import com.usagecontrol.feature.onboarding.PermissionWalkthroughScreen
 import com.usagecontrol.feature.onboarding.QuickSetupScreen
@@ -183,12 +183,7 @@ fun UsageControlAppContent(
 
             // Main app nested graph -- startDestination is the Now tab
             navigation(startDestination = AppScreen.NOW.route, route = "main") {
-                // T03 replaces this with NowScreen
-                composable(AppScreen.NOW.route) {
-                    NotificationsScreen(
-                        onNavigateToRules = { navController.navigate("rules/NOTIFICATION") },
-                    )
-                }
+                composable(AppScreen.NOW.route) { NowScreen() }
                 composable(AppScreen.APPS.route) { AppsPlaceholderScreen() }
                 composable(AppScreen.MODES.route) { ModesPlaceholderScreen() }
 
