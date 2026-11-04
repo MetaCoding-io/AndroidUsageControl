@@ -16,3 +16,14 @@ local.properties
 /gen
 /out
 *.log
+**/build/
+android-studio/*
+
+# GSD runtime state (DB is single-writer, machine-local)
+.gsd/gsd.db*
+.gsd/*.jsonl
+.gsd/audit/
+.gsd/migration/
+.gsd/worktrees/
+.bg-shell/
+.mcp.json

@@ -1,0 +1,12 @@
+{
+  "contract": "1.0.0",
+  "flavor": "pi",
+  "milestone": "M003 — v0.3 Learning & Blocking",
+  "phases": [],
+  "next": {
+    "command": "/gsd auto",
+    "label": "Plan M003",
+    "reason": "Active milestone has no slices yet"
+  },
+  "updated_at": "2026-11-04T04:36:47.149Z"
+}

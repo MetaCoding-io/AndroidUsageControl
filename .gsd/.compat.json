@@ -1,0 +1,56 @@
+{
+  "schema": 2,
+  "lastWriter": "gsd-pi",
+  "lastProjectedAt": "2026-11-04T04:41:00.957Z",
+  "projections": {
+    "PROJECT.md": {
+      "sha": "786f16ae9e9273b6",
+      "entities": []
+    },
+    "DECISIONS.md": {
+      "sha": "eee47d46e2b36b59",
+      "entities": []
+    },
+    "REQUIREMENTS.md": {
+      "sha": "af1156fc0c900190",
+      "entities": []
+    },
+    "KNOWLEDGE.md": {
+      "sha": "cadbb087c7c8a08a",
+      "entities": []
+    },
+    "phases/07-v0-3-doorman/07-ROADMAP.md": {
+      "sha": "bcd1b8a2e8ea7e96",
+      "entities": [
+        "M007"
+      ]
+    },
+    "ROADMAP.md": {
+      "sha": "4809572b7e1714f5",
+      "entities": []
+    },
+    "QUEUE.md": {
+      "sha": "80677b81b83edae2",
+      "entities": []
+    },
+    "phases/08-v0-4-lanes/08-ROADMAP.md": {
+      "sha": "b19c61240fc323af",
+      "entities": [
+        "M008"
+      ]
+    },
+    "phases/09-v0-5-modes-and-bridge/09-ROADMAP.md": {
+      "sha": "670c30cde9ce735d",
+      "entities": [
+        "M009"
+      ]
+    }
+  },
+  "planning": {
+    "active": false,
+    "layout": null,
+    "projections": {},
+    "passthrough": {}
+  },
+  "piVersion": ""
+}
