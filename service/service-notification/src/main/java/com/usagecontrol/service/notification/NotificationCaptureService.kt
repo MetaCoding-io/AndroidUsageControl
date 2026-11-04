@@ -1,103 +1,325 @@
 package com.usagecontrol.service.notification
 
+import android.app.Notification
+import android.os.Build
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
+import android.util.Log
+import androidx.core.app.NotificationCompat
 import com.usagecontrol.core.common.AppNameResolver
+import com.usagecontrol.core.database.dao.LiveNotificationDao
 import com.usagecontrol.core.database.dao.NotificationDao
+import com.usagecontrol.core.database.entity.LiveNotificationEntity
 import com.usagecontrol.core.database.entity.NotificationEntity
-import com.usagecontrol.core.database.toModel
+import com.usagecontrol.core.model.ActionType
 import com.usagecontrol.core.model.NotificationAction
 import com.usagecontrol.core.model.RulePillar
 import com.usagecontrol.core.rules.EvaluationContext
+import com.usagecontrol.core.rules.LaneInput
+import com.usagecontrol.core.rules.ProvisionalLaneClassifier
 import com.usagecontrol.core.rules.RuleEngine
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import org.json.JSONArray
+import org.json.JSONObject
 import javax.inject.Inject
 
+/**
+ * Captures notifications into history (keyed by StatusBarNotification key, one row per
+ * key with an update count and removal reason) and keeps ongoing / FGS / media
+ * notifications in the live table instead.
+ *
+ * All callbacks are applied on a single-threaded dispatcher so a post, its updates and
+ * its removal always hit the database in arrival order.
+ */
 @AndroidEntryPoint
 class NotificationCaptureService : NotificationListenerService() {
 
     @Inject lateinit var notificationDao: NotificationDao
+    @Inject lateinit var liveNotificationDao: LiveNotificationDao
     @Inject lateinit var ruleEngine: RuleEngine
+    @Inject lateinit var iconStore: IconStore
+    @Inject lateinit var pendingIntentCache: PendingIntentCache
 
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val errorHandler = CoroutineExceptionHandler { _, e ->
+        Log.e(TAG, "capture failed", e)
+    }
 
-    override fun onNotificationPosted(sbn: StatusBarNotification) {
-        scope.launch {
-            val notification = sbn.notification ?: return@launch
-            val extras = notification.extras
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO.limitedParallelism(1) + errorHandler)
 
-            val entity = NotificationEntity(
-                packageName = sbn.packageName,
-                appName = AppNameResolver.getAppName(applicationContext, sbn.packageName),
-                title = extras?.getCharSequence("android.title")?.toString(),
-                text = extras?.getCharSequence("android.text")?.toString(),
-                subText = extras?.getCharSequence("android.subText")?.toString(),
-                category = notification.category,
-                priority = notification.priority,
-                timestamp = sbn.postTime,
-                groupKey = sbn.groupKey,
-                isOngoing = sbn.isOngoing,
-                userAction = NotificationAction.NONE.name,
-                actionTimestamp = null,
-                ruleIdIfAutoDismissed = null,
-            )
-
-            val recordId = notificationDao.insert(entity)
-
-            // Check rules for auto-dismiss
-            val evalContext = EvaluationContext(
-                packageName = sbn.packageName,
-                notificationTitle = entity.title,
-                notificationText = entity.text,
-                notificationPriority = notification.priority,
-            )
-
-            val matchingRules = ruleEngine.findMatchingRules(RulePillar.NOTIFICATION, evalContext)
-            val dismissRule = matchingRules.firstOrNull { rule ->
-                rule.actions.any { it.type == com.usagecontrol.core.model.ActionType.DISMISS_NOTIFICATION }
-            }
-
-            if (dismissRule != null) {
-                notificationDao.markAutoDismissed(
-                    id = recordId,
-                    ruleId = dismissRule.id,
-                    timestamp = System.currentTimeMillis(),
-                )
-                cancelNotification(sbn.key)
-            }
-        }
+    override fun onNotificationPosted(sbn: StatusBarNotification, rankingMap: RankingMap?) {
+        scope.launch { handlePosted(sbn, rankingMap, applyRules = true) }
     }
 
     override fun onNotificationRemoved(sbn: StatusBarNotification, rankingMap: RankingMap?, reason: Int) {
-        scope.launch {
-            // Try to find the most recent notification from this package at this time
-            // and mark it as dismissed (if the user dismissed it, not auto-dismissed)
-            val recent = notificationDao.search(
-                packageName = sbn.packageName,
-                searchQuery = null,
-                startTime = sbn.postTime - 1000,
-                endTime = sbn.postTime + 1000,
-                limit = 1,
-            ).firstOrNull()
+        scope.launch { handleRemoved(sbn, reason) }
+    }
 
-            if (recent != null && recent.userAction == NotificationAction.NONE.name) {
-                val action = when (reason) {
-                    REASON_CLICK -> NotificationAction.OPENED
-                    REASON_CANCEL, REASON_CANCEL_ALL -> NotificationAction.DISMISSED
-                    else -> NotificationAction.DISMISSED
-                }
-                notificationDao.updateAction(recent.id, action.name, System.currentTimeMillis())
-            }
+    override fun onListenerConnected() {
+        super.onListenerConnected()
+        scope.launch { reconcile() }
+    }
+
+    override fun onListenerDisconnected() {
+        super.onListenerDisconnected()
+        // PendingIntents from a previous binding may be stale; reconcile re-caches on reconnect.
+        scope.launch {
+            val cleared = pendingIntentCache.size
+            pendingIntentCache.clear()
+            Log.i(TAG, "disconnected: cleared $cleared cached intents")
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
         scope.cancel()
+    }
+
+    // -- handlers (run on the serial dispatcher) --
+
+    private suspend fun handlePosted(sbn: StatusBarNotification, rankingMap: RankingMap?, applyRules: Boolean) {
+        val notification = sbn.notification ?: return
+        val key = sbn.key
+
+        cacheIntents(key, notification)
+
+        if (isLive(notification)) {
+            liveNotificationDao.upsert(buildLive(sbn, notification))
+            Log.d(TAG, "live upsert key=$key pkg=${sbn.packageName}")
+            return
+        }
+        // A notification that stopped being ongoing leaves the live table.
+        liveNotificationDao.deleteByKey(key)
+
+        val entity = buildEntity(sbn, notification, rankingMap)
+        val recordId = notificationDao.upsertByKey(entity)
+        val updateCount = notificationDao.getById(recordId)?.updateCount ?: 0
+        Log.d(TAG, "posted key=$key id=$recordId updateCount=$updateCount lane=${entity.provisionalLane}")
+
+        if (applyRules) applyDismissRules(sbn, entity, recordId)
+    }
+
+    private suspend fun handleRemoved(sbn: StatusBarNotification, reason: Int) {
+        val key = sbn.key
+        val reasonName = CaptureMapping.removalReasonName(reason)
+        pendingIntentCache.remove(key)
+
+        if (liveNotificationDao.deleteByKey(key) > 0) {
+            Log.d(TAG, "live removed key=$key reason=$reasonName")
+            return
+        }
+        val id = notificationDao.findIdByKey(key)
+        if (id == null) {
+            Log.d(TAG, "removed key=$key reason=$reasonName: no live history row")
+            return
+        }
+        notificationDao.markRemoved(id, reasonName, System.currentTimeMillis())
+        val updateCount = notificationDao.getById(id)?.updateCount ?: 0
+        Log.d(TAG, "removed key=$key id=$id updateCount=$updateCount reason=$reasonName")
+    }
+
+    /**
+     * Brings the live table in line with what is actually posted and records any
+     * non-ongoing notifications posted while the listener was unbound. Rules are not
+     * applied here: reconnecting must not suddenly cancel notifications the user can see.
+     */
+    private suspend fun reconcile() {
+        val active = try {
+            activeNotifications.orEmpty()
+        } catch (e: Exception) {
+            Log.w(TAG, "reconcile: activeNotifications unavailable", e)
+            return
+        }
+        val ranking = try { currentRanking } catch (e: Exception) { null }
+
+        val liveKeys = mutableListOf<String>()
+        var historyAdded = 0
+        for (sbn in active) {
+            val notification = sbn.notification ?: continue
+            if (isLive(notification)) {
+                liveKeys += sbn.key
+                cacheIntents(sbn.key, notification)
+                liveNotificationDao.upsert(buildLive(sbn, notification))
+            } else if (notificationDao.findIdByKey(sbn.key) == null) {
+                handlePosted(sbn, ranking, applyRules = false)
+                historyAdded++
+            } else {
+                // Already recorded; only refresh the process-scoped intents.
+                cacheIntents(sbn.key, notification)
+            }
+        }
+        val liveRemoved = if (liveKeys.isEmpty()) {
+            liveNotificationDao.getAllKeys().size.also { liveNotificationDao.clear() }
+        } else {
+            liveNotificationDao.deleteNotIn(liveKeys)
+        }
+        Log.i(
+            TAG,
+            "reconcile: active=${active.size} live=${liveKeys.size} liveRemoved=$liveRemoved historyAdded=$historyAdded",
+        )
+    }
+
+    private suspend fun applyDismissRules(sbn: StatusBarNotification, entity: NotificationEntity, recordId: Long) {
+        val evalContext = EvaluationContext(
+            packageName = sbn.packageName,
+            notificationTitle = entity.title,
+            notificationText = entity.text,
+            notificationPriority = entity.priority,
+        )
+        val dismissRule = ruleEngine.findMatchingRules(RulePillar.NOTIFICATION, evalContext)
+            .firstOrNull { rule -> rule.actions.any { it.type == ActionType.DISMISS_NOTIFICATION } }
+            ?: return
+
+        notificationDao.markAutoDismissed(
+            id = recordId,
+            ruleId = dismissRule.id,
+            timestamp = System.currentTimeMillis(),
+        )
+        Log.d(TAG, "auto-dismiss key=${sbn.key} id=$recordId rule=${dismissRule.id}")
+        cancelNotification(sbn.key)
+    }
+
+    // -- builders --
+
+    private fun isLive(notification: Notification): Boolean {
+        val extras = notification.extras
+        return CaptureMapping.isLive(
+            flags = notification.flags,
+            template = extras?.getString(Notification.EXTRA_TEMPLATE),
+            hasMediaSession = extras?.containsKey(Notification.EXTRA_MEDIA_SESSION) == true,
+        )
+    }
+
+    private fun cacheIntents(key: String, notification: Notification) {
+        pendingIntentCache.put(
+            key = key,
+            contentIntent = notification.contentIntent,
+            actionIntents = notification.actions.orEmpty().map { it?.actionIntent },
+        )
+    }
+
+    private fun buildLive(sbn: StatusBarNotification, notification: Notification): LiveNotificationEntity {
+        val extras = notification.extras
+        return LiveNotificationEntity(
+            key = sbn.key,
+            packageName = sbn.packageName,
+            title = extras?.getCharSequence(Notification.EXTRA_TITLE)?.toString(),
+            text = extras?.getCharSequence(Notification.EXTRA_TEXT)?.toString(),
+            category = notification.category,
+            channelId = notification.channelId,
+            isOngoing = sbn.isOngoing,
+            postTime = sbn.postTime,
+            smallIconPath = iconStore.save(sbn.packageName, notification.smallIcon),
+            flags = notification.flags,
+        )
+    }
+
+    private fun buildEntity(
+        sbn: StatusBarNotification,
+        notification: Notification,
+        rankingMap: RankingMap?,
+    ): NotificationEntity {
+        val extras = notification.extras
+        val ranking = rankingMap?.let { map -> Ranking().takeIf { map.getRanking(sbn.key, it) } }
+
+        val channelId = ranking?.channel?.id ?: notification.channelId
+        val importance = ranking?.importance ?: 0
+        val isConversation = Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && ranking?.isConversation == true
+        val shortcutId = (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            ranking?.conversationShortcutInfo?.id
+        } else null) ?: notification.shortcutId
+
+        val title = (extras?.getCharSequence(Notification.EXTRA_TITLE)
+            ?: extras?.getCharSequence(Notification.EXTRA_TITLE_BIG))?.toString()
+        val text = (extras?.getCharSequence(Notification.EXTRA_BIG_TEXT)
+            ?: extras?.getCharSequence(Notification.EXTRA_TEXT))?.toString()
+        val actions = notification.actions.orEmpty().filterNotNull()
+        val hasRemoteInput = actions.any { !it.remoteInputs.isNullOrEmpty() }
+
+        val lane = ProvisionalLaneClassifier.classify(
+            LaneInput(
+                category = notification.category,
+                channelId = channelId,
+                importance = importance,
+                isConversation = isConversation,
+                isOngoing = sbn.isOngoing,
+                hasRemoteInputAction = hasRemoteInput,
+            ),
+        )
+
+        return NotificationEntity(
+            packageName = sbn.packageName,
+            appName = AppNameResolver.getAppName(applicationContext, sbn.packageName),
+            title = title,
+            text = text,
+            subText = extras?.getCharSequence(Notification.EXTRA_SUB_TEXT)?.toString(),
+            category = notification.category,
+            priority = @Suppress("DEPRECATION") notification.priority,
+            timestamp = sbn.postTime,
+            groupKey = sbn.groupKey,
+            isOngoing = sbn.isOngoing,
+            userAction = NotificationAction.NONE.name,
+            actionTimestamp = null,
+            ruleIdIfAutoDismissed = null,
+            key = sbn.key,
+            notifId = sbn.id,
+            tag = sbn.tag,
+            channelId = channelId,
+            importance = importance,
+            isConversation = isConversation,
+            shortcutId = shortcutId,
+            whenMs = notification.`when`,
+            isGroupSummary = (notification.flags and Notification.FLAG_GROUP_SUMMARY) != 0,
+            flags = notification.flags,
+            color = notification.color,
+            smallIconPath = iconStore.save(sbn.packageName, notification.smallIcon),
+            largeIconPath = iconStore.save(sbn.packageName, notification.getLargeIcon()),
+            provisionalLane = lane.name,
+            messagesJson = messagesJson(notification),
+            actionsJson = actionsJson(actions),
+        )
+    }
+
+    private fun messagesJson(notification: Notification): String? = try {
+        val style = NotificationCompat.MessagingStyle.extractMessagingStyleFromNotification(notification)
+        val messages = style?.messages.orEmpty()
+        if (messages.isEmpty()) null else JSONArray().apply {
+            messages.forEach { m ->
+                put(
+                    JSONObject()
+                        .put("sender", m.person?.name?.toString())
+                        .put("text", m.text?.toString())
+                        .put("time", m.timestamp),
+                )
+            }
+        }.toString()
+    } catch (e: Exception) {
+        Log.w(TAG, "messagesJson: failed to extract messages", e)
+        null
+    }
+
+    private fun actionsJson(actions: List<Notification.Action>): String? {
+        if (actions.isEmpty()) return null
+        return JSONArray().apply {
+            actions.forEach { a ->
+                put(
+                    JSONObject()
+                        .put("title", a.title?.toString())
+                        .put("hasRemoteInput", !a.remoteInputs.isNullOrEmpty())
+                        .put("semanticAction", a.semanticAction),
+                )
+            }
+        }.toString()
+    }
+
+    companion object {
+        private const val TAG = "NotificationCapture"
     }
 }
