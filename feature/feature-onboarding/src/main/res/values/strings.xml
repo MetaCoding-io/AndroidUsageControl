@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="onboarding_app_name">Doorman</string>
+    <string name="onboarding_perm_notification_explanation">This lets %1$s read your notifications so it can track which apps notify you most, apply your notification rules, and show you patterns over time.</string>
+    <string name="onboarding_perm_usage_explanation">This lets %1$s see how long you use each app so it can show your screen time, enforce time limits you set, and track your usage trends.</string>
+    <string name="onboarding_perm_dnd_explanation">This lets %1$s change your sound and Do Not Disturb settings automatically when your rules and presets are triggered.</string>
+    <string name="onboarding_perm_settings_hint">You\'ll be taken to your device settings. Find \"%1$s\" in the list and enable it.</string>
+</resources>

@@ -45,12 +45,12 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/Theme.UsageControl">
+        android:theme="@style/Theme.Doorman">
 
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:theme="@style/Theme.UsageControl">
+            android:theme="@style/Theme.Doorman">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -75,7 +75,7 @@
             android:name="com.usagecontrol.feature.screentime.BlockOverlayActivity"
             android:exported="false"
             android:excludeFromRecents="true"
-            android:theme="@style/Theme.UsageControl" />
+            android:theme="@style/Theme.Doorman" />
 
         <!-- Notification Listener Service -->
         <service
