@@ -310,6 +310,7 @@ private fun NotificationItem(
                     NotificationAction.OPENED -> "Opened"
                     NotificationAction.AUTO_DISMISSED -> "Auto-dismissed"
                     NotificationAction.SNOOZED -> "Snoozed"
+                    NotificationAction.ARCHIVED -> "Archived"
                     NotificationAction.NONE -> "Pending"
                 }
                 Text(

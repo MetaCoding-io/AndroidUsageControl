@@ -25,7 +25,7 @@ fun NotificationEntity.toModel() = NotificationRecord(
     timestamp = timestamp,
     groupKey = groupKey,
     isOngoing = isOngoing,
-    userAction = NotificationAction.valueOf(userAction),
+    userAction = NotificationAction.entries.firstOrNull { it.name == userAction } ?: NotificationAction.NONE,
     actionTimestamp = actionTimestamp,
     ruleIdIfAutoDismissed = ruleIdIfAutoDismissed,
     key = key,

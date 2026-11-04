@@ -42,4 +42,7 @@ enum class NotificationAction {
     OPENED,
     SNOOZED,
     AUTO_DISMISSED,
+
+    /** Archived from the Now stream by the user (swipe); hidden from Now, undoable for a short window. */
+    ARCHIVED,
 }

@@ -151,6 +151,47 @@ interface NotificationDao {
     """)
     suspend fun markRemoved(id: Long, reason: String, timestamp: Long): Int
 
+    // -- Now stream --
+
+    /**
+     * Rows for the Now stream: live keyed rows (still in the shade) plus anything posted since
+     * [since], excluding group summaries, ongoing rows and user-archived rows. Legacy v3 rows
+     * have no key and never get removedAt, so they only show up through the [since] window.
+     */
+    @Query("""
+        SELECT * FROM notifications
+        WHERE ((removedAt IS NULL AND `key` IS NOT NULL) OR timestamp >= :since)
+        AND isGroupSummary = 0 AND isOngoing = 0
+        AND userAction != 'ARCHIVED'
+        ORDER BY timestamp DESC
+        LIMIT :limit
+    """)
+    fun nowStreamFlow(since: Long, limit: Int = 500): Flow<List<NotificationEntity>>
+
+    /** Rows removed from the shade since [since], most recently removed first. */
+    @Query("""
+        SELECT * FROM notifications
+        WHERE removedAt >= :since AND isGroupSummary = 0 AND isOngoing = 0
+        ORDER BY removedAt DESC
+        LIMIT :limit
+    """)
+    fun recentlyDismissedFlow(since: Long, limit: Int = 100): Flow<List<NotificationEntity>>
+
+    /** Interruptions today: non-ongoing, non-summary rows posted or updated since [startOfDay]. */
+    @Query("""
+        SELECT COUNT(*) FROM notifications
+        WHERE timestamp >= :startOfDay AND isOngoing = 0 AND isGroupSummary = 0
+    """)
+    fun todayInterruptionCount(startOfDay: Long): Flow<Int>
+
+    /** Record a user triage action (e.g. ARCHIVED, SNOOZED) on a row. */
+    @Query("UPDATE notifications SET userAction = :action, actionTimestamp = :timestamp WHERE id = :id")
+    suspend fun markUserAction(id: Long, action: String, timestamp: Long): Int
+
+    /** Undo a user triage action: back to NONE with no action time. */
+    @Query("UPDATE notifications SET userAction = 'NONE', actionTimestamp = NULL WHERE id = :id")
+    suspend fun clearUserAction(id: Long): Int
+
     // Hour-of-day distribution of dismissed notifications per app
     @Query("""
         SELECT packageName, appName,
