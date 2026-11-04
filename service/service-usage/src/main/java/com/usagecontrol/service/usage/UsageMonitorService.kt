@@ -1,5 +1,6 @@
 package com.usagecontrol.service.usage
 
+import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -68,6 +69,9 @@ class UsageMonitorService : Service() {
         }
     }
 
+    // PACKAGE_USAGE_STATS is declared in the app manifest and granted via Usage Access;
+    // without it queryUsageStats returns an empty list rather than throwing.
+    @SuppressLint("MissingPermission")
     private suspend fun pollUsageStats() {
         val usageStatsManager = getSystemService(Context.USAGE_STATS_SERVICE) as? UsageStatsManager
             ?: return
