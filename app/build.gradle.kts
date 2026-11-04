@@ -41,6 +41,8 @@ android {
         resValues = true
     }
 
+    sourceSets["androidTest"].assets.srcDir(project(":core:core-database").file("schemas"))
+
     packaging { resources { excludes += "/META-INF/{AL2.0,LGPL2.1}" } }
 }
 
@@ -99,4 +101,7 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.junit.ext)
     androidTestImplementation(libs.espresso.core)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.core)
+    androidTestImplementation(libs.room.testing)
 }
