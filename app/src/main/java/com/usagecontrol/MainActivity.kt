@@ -8,10 +8,13 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -34,7 +37,10 @@ import com.usagecontrol.feature.rules.RuleEditorScreen
 import com.usagecontrol.feature.rules.RuleListScreen
 import com.usagecontrol.feature.screentime.ScreenTimeScreen
 import com.usagecontrol.feature.settings.SettingsScreen
+import com.usagecontrol.navigation.AppRoutes
 import com.usagecontrol.navigation.AppScreen
+import com.usagecontrol.navigation.AppsPlaceholderScreen
+import com.usagecontrol.navigation.ModesPlaceholderScreen
 import com.usagecontrol.service.context.ContextMonitorService
 import com.usagecontrol.service.usage.UsageMonitorService
 import dagger.hilt.android.AndroidEntryPoint
@@ -62,6 +68,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UsageControlAppContent(
     viewModel: MainViewModel = hiltViewModel(),
@@ -78,14 +85,33 @@ fun UsageControlAppContent(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    // Bottom bar only on main tab routes -- onboarding routes are not in AppScreen enum
-    val showBottomBar = currentRoute in AppScreen.entries.map { it.route }
+    // Bottom bar + top bar only on the three tab routes; settings/rules/tour/etc. are pushed screens
+    val currentTab = AppScreen.entries.firstOrNull { it.route == currentRoute }
+    val showBottomBar = currentTab != null
 
     Scaffold(
+        topBar = {
+            if (currentTab != null) {
+                TopAppBar(
+                    title = { Text(stringResource(currentTab.labelRes)) },
+                    actions = {
+                        IconButton(
+                            modifier = Modifier.testTag("settings_gear"),
+                            onClick = {
+                                navController.navigate(AppRoutes.SETTINGS) { launchSingleTop = true }
+                            },
+                        ) {
+                            Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.settings))
+                        }
+                    },
+                )
+            }
+        },
         bottomBar = {
             if (showBottomBar) {
                 NavigationBar {
                     AppScreen.entries.forEach { screen ->
+                        val label = stringResource(screen.labelRes)
                         NavigationBarItem(
                             modifier = Modifier.testTag("nav_tab_${screen.route}"),
                             selected = currentRoute == screen.route,
@@ -98,8 +124,8 @@ fun UsageControlAppContent(
                                     restoreState = true
                                 }
                             },
-                            icon = { Icon(screen.icon, contentDescription = screen.title) },
-                            label = { Text(screen.title) },
+                            icon = { Icon(screen.icon, contentDescription = label) },
+                            label = { Text(label) },
                         )
                     }
                 }
@@ -155,31 +181,36 @@ fun UsageControlAppContent(
                 }
             }
 
-            // Main app nested graph -- startDestination is Notifications tab
-            navigation(startDestination = AppScreen.Notifications.route, route = "main") {
-                composable(AppScreen.Notifications.route) {
+            // Main app nested graph -- startDestination is the Now tab
+            navigation(startDestination = AppScreen.NOW.route, route = "main") {
+                // T03 replaces this with NowScreen
+                composable(AppScreen.NOW.route) {
                     NotificationsScreen(
                         onNavigateToRules = { navController.navigate("rules/NOTIFICATION") },
                     )
                 }
-                composable(AppScreen.ScreenTime.route) {
+                composable(AppScreen.APPS.route) { AppsPlaceholderScreen() }
+                composable(AppScreen.MODES.route) { ModesPlaceholderScreen() }
+
+                // Off-bar routes: still reachable by navigation, never shown in the bottom bar
+                composable(AppRoutes.SCREEN_TIME) {
                     ScreenTimeScreen(
                         onNavigateToRules = { navController.navigate("rules/SCREEN_TIME") },
                     )
                 }
-                composable(AppScreen.Controls.route) {
+                composable(AppRoutes.CONTROLS) {
                     LockControlScreen(
                         onNavigateToRules = { navController.navigate("rules/LOCK_SOUND") },
                     )
                 }
-                composable(AppScreen.Insights.route) { LearningScreen() }
-                composable(AppScreen.Settings.route) {
+                composable(AppRoutes.INSIGHTS) { LearningScreen() }
+                composable(AppRoutes.SETTINGS) {
                     SettingsScreen(
-                        onRevisitTour = { navController.navigate("tour/standalone") },
+                        onRevisitTour = { navController.navigate(AppRoutes.TOUR) },
                     )
                 }
 
-                composable("tour/standalone") {
+                composable(AppRoutes.TOUR) {
                     FeatureTourScreen(
                         onNext = { navController.popBackStack() },
                         onSkip = { navController.popBackStack() },
