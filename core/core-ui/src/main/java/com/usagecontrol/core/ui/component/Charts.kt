@@ -208,3 +208,30 @@ fun DonutChart(
         }
     }
 }
+
+/**
+ * Tiny axis-free trend line for list rows. Renders nothing for fewer than two points;
+ * an all-zero series draws a flat baseline.
+ */
+@Composable
+fun Sparkline(
+    values: List<Float>,
+    modifier: Modifier = Modifier,
+    lineColor: Color = MaterialTheme.colorScheme.primary,
+) {
+    if (values.size < 2) return
+
+    Canvas(modifier = modifier.size(width = 64.dp, height = 20.dp)) {
+        val stroke = 1.5.dp.toPx()
+        val maxVal = values.max().coerceAtLeast(1f)
+        val usable = size.height - stroke
+        val stepX = size.width / (values.size - 1)
+        val path = Path()
+        values.forEachIndexed { index, value ->
+            val x = index * stepX
+            val y = stroke / 2 + usable - (value.coerceAtLeast(0f) / maxVal * usable)
+            if (index == 0) path.moveTo(x, y) else path.lineTo(x, y)
+        }
+        drawPath(path, lineColor, style = Stroke(width = stroke, cap = StrokeCap.Round))
+    }
+}

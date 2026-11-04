@@ -119,3 +119,18 @@ fun NotificationIcon(record: NotificationRecord, modifier: Modifier = Modifier) 
     )
 }
 
+
+/** 32dp launcher icon for [packageName] (Apps tab rows, app profile); nothing if the app is gone. */
+@Composable
+fun AppIcon(packageName: String, modifier: Modifier = Modifier) {
+    val context = LocalContext.current.applicationContext
+    val icon by produceState<ImageBitmap?>(initialValue = null, packageName) {
+        value = withContext(Dispatchers.IO) { loadAppIcon(context, packageName) }
+    }
+    val loaded = icon ?: return
+    Image(
+        bitmap = loaded,
+        contentDescription = null,
+        modifier = modifier.size(32.dp).clip(CircleShape),
+    )
+}

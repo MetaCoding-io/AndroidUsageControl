@@ -87,6 +87,12 @@ fun ComponentGallery(modifier: Modifier = Modifier) {
             )
             BundleRow(lane = Lane.Noise, title = "Noise", count = 128, time = "09:15")
         }
+
+        SectionHeader(title = "Sparkline", meta = "7d")
+        Sparkline(
+            values = listOf(4f, 9f, 3f, 12f, 7f, 15f, 6f),
+            modifier = Modifier.padding(horizontal = 16.dp),
+        )
     }
 }
 

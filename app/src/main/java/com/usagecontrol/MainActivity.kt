@@ -29,6 +29,8 @@ import com.usagecontrol.core.ui.theme.DoormanTheme
 import com.usagecontrol.feature.learning.LearningScreen
 import com.usagecontrol.feature.lockcontrol.LockControlScreen
 import com.usagecontrol.feature.notifications.NowScreen
+import com.usagecontrol.feature.notifications.apps.AppProfileScreen
+import com.usagecontrol.feature.notifications.apps.AppsScreen
 import com.usagecontrol.feature.onboarding.FeatureTourScreen
 import com.usagecontrol.feature.onboarding.PermissionWalkthroughScreen
 import com.usagecontrol.feature.onboarding.QuickSetupScreen
@@ -39,7 +41,6 @@ import com.usagecontrol.feature.screentime.ScreenTimeScreen
 import com.usagecontrol.feature.settings.SettingsScreen
 import com.usagecontrol.navigation.AppRoutes
 import com.usagecontrol.navigation.AppScreen
-import com.usagecontrol.navigation.AppsPlaceholderScreen
 import com.usagecontrol.navigation.ModesPlaceholderScreen
 import com.usagecontrol.service.context.ContextMonitorService
 import com.usagecontrol.service.usage.UsageMonitorService
@@ -184,7 +185,11 @@ fun UsageControlAppContent(
             // Main app nested graph -- startDestination is the Now tab
             navigation(startDestination = AppScreen.NOW.route, route = "main") {
                 composable(AppScreen.NOW.route) { NowScreen() }
-                composable(AppScreen.APPS.route) { AppsPlaceholderScreen() }
+                composable(AppScreen.APPS.route) {
+                    AppsScreen(
+                        onOpenApp = { pkg -> navController.navigate(AppRoutes.appProfile(pkg)) },
+                    )
+                }
                 composable(AppScreen.MODES.route) { ModesPlaceholderScreen() }
 
                 // Off-bar routes: still reachable by navigation, never shown in the bottom bar
@@ -203,6 +208,13 @@ fun UsageControlAppContent(
                     SettingsScreen(
                         onRevisitTour = { navController.navigate(AppRoutes.TOUR) },
                     )
+                }
+
+                composable(
+                    route = AppRoutes.APP_PROFILE,
+                    arguments = listOf(navArgument("packageName") { type = NavType.StringType }),
+                ) {
+                    AppProfileScreen(onNavigateBack = { navController.popBackStack() })
                 }
 
                 composable(AppRoutes.TOUR) {

@@ -1,5 +1,6 @@
 package com.usagecontrol.navigation
 
+import android.net.Uri
 import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -24,4 +25,8 @@ object AppRoutes {
     const val CONTROLS = "controls"
     const val INSIGHTS = "insights"
     const val TOUR = "tour/standalone"
+    const val APP_PROFILE = "apps/{packageName}"
+
+    /** Package names are [A-Za-z0-9_.], but encode anyway so a bad value can't break the route. */
+    fun appProfile(packageName: String): String = "apps/${Uri.encode(packageName)}"
 }
