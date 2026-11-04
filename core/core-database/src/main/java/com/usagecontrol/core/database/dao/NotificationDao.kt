@@ -155,14 +155,15 @@ interface NotificationDao {
 
     /**
      * Rows for the Now stream: live keyed rows (still in the shade) plus anything posted since
-     * [since], excluding group summaries, ongoing rows and user-archived rows. Legacy v3 rows
+     * [since], excluding group summaries, ongoing rows and user-archived or snoozed rows (a
+     * snoozed notification reposts as a new row). Legacy v3 rows
      * have no key and never get removedAt, so they only show up through the [since] window.
      */
     @Query("""
         SELECT * FROM notifications
         WHERE ((removedAt IS NULL AND `key` IS NOT NULL) OR timestamp >= :since)
         AND isGroupSummary = 0 AND isOngoing = 0
-        AND userAction != 'ARCHIVED'
+        AND userAction NOT IN ('ARCHIVED', 'SNOOZED')
         ORDER BY timestamp DESC
         LIMIT :limit
     """)

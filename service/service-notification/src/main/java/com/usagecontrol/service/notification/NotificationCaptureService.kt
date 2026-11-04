@@ -64,11 +64,13 @@ class NotificationCaptureService : NotificationListenerService() {
 
     override fun onListenerConnected() {
         super.onListenerConnected()
+        instance = this
         scope.launch { reconcile() }
     }
 
     override fun onListenerDisconnected() {
         super.onListenerDisconnected()
+        if (instance === this) instance = null
         // PendingIntents from a previous binding may be stale; reconcile re-caches on reconnect.
         scope.launch {
             val cleared = pendingIntentCache.size
@@ -79,6 +81,7 @@ class NotificationCaptureService : NotificationListenerService() {
 
     override fun onDestroy() {
         super.onDestroy()
+        if (instance === this) instance = null
         scope.cancel()
     }
 
@@ -231,8 +234,8 @@ class NotificationCaptureService : NotificationListenerService() {
 
         val channelId = ranking?.channel?.id ?: notification.channelId
         val importance = ranking?.importance ?: 0
-        val isConversation = Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && ranking?.isConversation == true
-        val shortcutId = (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        val isConversation = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && ranking?.isConversation == true
+        val shortcutId = (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             ranking?.conversationShortcutInfo?.id
         } else null) ?: notification.shortcutId
 
@@ -321,5 +324,10 @@ class NotificationCaptureService : NotificationListenerService() {
 
     companion object {
         private const val TAG = "NotificationCapture"
+
+        /** The bound listener, or null while unbound; used by [NotificationActionsImpl]. */
+        @Volatile
+        internal var instance: NotificationCaptureService? = null
+            private set
     }
 }

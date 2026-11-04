@@ -232,4 +232,74 @@ class NowStreamTest {
         assertEquals(listOf(pct), filter(listOf(pct, plain), "%"))
         assertTrue(filter(listOf(plain), ".*").isEmpty())
     }
+
+    // -- snoozeDurationUntil --
+
+    private val minute = 60_000L
+    private val hour = 60 * minute
+
+    @Test
+    fun snoozeDurationUntil_laterToday_isSameDay() {
+        assertEquals(2 * hour + 30 * minute, snoozeDurationUntil(17, 30, now, zone))
+    }
+
+    @Test
+    fun snoozeDurationUntil_earlierClockTime_rollsToTomorrow() {
+        // 15:00 -> 09:00 next day
+        assertEquals(18 * hour, snoozeDurationUntil(9, 0, now, zone))
+    }
+
+    @Test
+    fun snoozeDurationUntil_exactlyNow_isTomorrowNotZero() {
+        assertEquals(24 * hour, snoozeDurationUntil(15, 0, now, zone))
+    }
+
+    @Test
+    fun snoozeDurationUntil_oneMinuteAhead_isOneMinute() {
+        assertEquals(minute, snoozeDurationUntil(15, 1, now, zone))
+    }
+
+    @Test
+    fun snoozeDurationUntil_ignoresSecondsInNow() {
+        val withSeconds = now + 45_000L
+        assertEquals(minute - 45_000L, snoozeDurationUntil(15, 1, withSeconds, zone))
+    }
+
+    @Test
+    fun snoozeDurationUntil_acrossMidnight() {
+        val lateNight = at(2026, 11, 4, 23, 50)
+        assertEquals(20 * minute, snoozeDurationUntil(0, 10, lateNight, zone))
+    }
+
+    @Test
+    fun snoozeDurationUntil_fallBackDay_countsTheExtraHour() {
+        // DST ends 2026-11-01 02:00 in New York: 23:00 -> 08:00 spans 10 real hours.
+        val before = at(2026, 10, 31, 23, 0)
+        assertEquals(10 * hour, snoozeDurationUntil(8, 0, before, zone))
+    }
+
+    @Test
+    fun snoozeDurationUntil_springForwardGap_shiftsForward() {
+        // 02:30 does not exist on 2026-03-08; it resolves to 03:30 EDT, 1.5 h after 01:00 EST.
+        val before = at(2026, 3, 8, 1, 0)
+        assertEquals(hour + 30 * minute, snoozeDurationUntil(2, 30, before, zone))
+    }
+
+    @Test
+    fun snoozeDurationUntil_alwaysPositiveAndAtMostOneDay() {
+        for (h in 0..23) for (m in listOf(0, 59)) {
+            val d = snoozeDurationUntil(h, m, now, zone)
+            assertTrue("$h:$m -> $d", d in 1..24 * hour)
+        }
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun snoozeDurationUntil_hourOutOfRange_throws() {
+        snoozeDurationUntil(24, 0, now, zone)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun snoozeDurationUntil_negativeMinute_throws() {
+        snoozeDurationUntil(9, -1, now, zone)
+    }
 }

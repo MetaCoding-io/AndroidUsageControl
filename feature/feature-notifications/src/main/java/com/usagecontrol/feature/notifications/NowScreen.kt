@@ -1,33 +1,54 @@
 package com.usagecontrol.feature.notifications
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.rememberSwipeToDismissBoxState
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -43,6 +64,8 @@ import com.usagecontrol.core.ui.component.EmptyState
 import com.usagecontrol.core.ui.component.HeroCount
 import com.usagecontrol.core.ui.component.NotificationRow
 import com.usagecontrol.core.ui.component.SectionHeader
+import kotlinx.coroutines.launch
+import java.util.Calendar
 
 /** The daily Now stream: hero count, context strip, search, time sections and recently dismissed. */
 @Composable
@@ -58,11 +81,68 @@ fun NowScreen(viewModel: NowViewModel = hiltViewModel()) {
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    NowContent(state = state, onQueryChange = viewModel::setQuery)
+    val snackbarHostState = remember { SnackbarHostState() }
+    LaunchedEffect(viewModel) {
+        viewModel.events.collect { event ->
+            when (event) {
+                is NowEvent.Archived -> launch {
+                    // Long is 10 s, matching the archive commit delay.
+                    val result = snackbarHostState.showSnackbar(
+                        message = "Archived \"${event.title}\"",
+                        actionLabel = "Undo",
+                        duration = SnackbarDuration.Long,
+                    )
+                    if (result == SnackbarResult.ActionPerformed) viewModel.undoArchive(event.recordId)
+                }
+                is NowEvent.Message -> launch {
+                    snackbarHostState.showSnackbar(
+                        message = event.text,
+                        duration = if (event.isError) SnackbarDuration.Long else SnackbarDuration.Short,
+                        withDismissAction = event.isError,
+                    )
+                }
+            }
+        }
+    }
+
+    var snoozeTarget by remember { mutableStateOf<NotificationRecord?>(null) }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        NowContent(
+            state = state,
+            onQueryChange = viewModel::setQuery,
+            rowActions = RowActions(
+                onOpen = viewModel::open,
+                onArchive = viewModel::archive,
+                onSnoozeRequest = { snoozeTarget = it },
+            ),
+        )
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter).testTag("now_snackbar"),
+        )
+    }
+
+    snoozeTarget?.let { record ->
+        SnoozeTimeDialog(
+            onConfirm = { hour, minute ->
+                snoozeTarget = null
+                viewModel.snooze(record, hour, minute)
+            },
+            onDismiss = { snoozeTarget = null },
+        )
+    }
 }
 
+/** Callbacks shared by every swipeable stream row. */
+private class RowActions(
+    val onOpen: (NotificationRecord) -> Unit,
+    val onArchive: (NotificationRecord) -> Unit,
+    val onSnoozeRequest: (NotificationRecord) -> Unit,
+)
+
 @Composable
-private fun NowContent(state: NowUiState, onQueryChange: (String) -> Unit) {
+private fun NowContent(state: NowUiState, onQueryChange: (String) -> Unit, rowActions: RowActions) {
     var expandedBundles by remember { mutableStateOf(emptySet<String>()) }
     var dismissedExpanded by rememberSaveable { mutableStateOf(false) }
 
@@ -108,10 +188,11 @@ private fun NowContent(state: NowUiState, onQueryChange: (String) -> Unit) {
             section.items.forEach { item ->
                 when (item) {
                     is SingleItem -> item(key = item.id) {
-                        NotificationItem(item.record, Modifier.padding(horizontal = 12.dp))
+                        SwipeableNotificationItem(item.record, rowActions, Modifier.padding(horizontal = 12.dp))
                     }
                     is BundleItem -> bundleItems(
                         bundle = item,
+                        rowActions = rowActions,
                         expanded = item.id in expandedBundles,
                         onToggle = {
                             expandedBundles = if (item.id in expandedBundles) {
@@ -135,14 +216,24 @@ private fun NowContent(state: NowUiState, onQueryChange: (String) -> Unit) {
             }
             if (dismissedExpanded) {
                 items(state.recentlyDismissed, key = { "d:${it.id}" }) { record ->
-                    NotificationItem(record, Modifier.padding(horizontal = 12.dp), unread = false)
+                    NotificationItem(
+                        record,
+                        Modifier.padding(horizontal = 12.dp),
+                        unread = false,
+                        onClick = { rowActions.onOpen(record) },
+                    )
                 }
             }
         }
     }
 }
 
-private fun LazyListScope.bundleItems(bundle: BundleItem, expanded: Boolean, onToggle: () -> Unit) {
+private fun LazyListScope.bundleItems(
+    bundle: BundleItem,
+    rowActions: RowActions,
+    expanded: Boolean,
+    onToggle: () -> Unit,
+) {
     item(key = bundle.id) {
         val newest = bundle.rows.first()
         BundleRow(
@@ -157,13 +248,101 @@ private fun LazyListScope.bundleItems(bundle: BundleItem, expanded: Boolean, onT
     }
     if (expanded) {
         items(bundle.rows, key = { "${bundle.id}:${it.id}" }) { record ->
-            NotificationItem(record, Modifier.padding(start = 28.dp, end = 12.dp))
+            SwipeableNotificationItem(record, rowActions, Modifier.padding(start = 28.dp, end = 12.dp))
         }
     }
 }
 
+/**
+ * A stream row with swipe actions: start-to-end archives (with undo), end-to-start asks for a
+ * snooze time and springs back; tap opens the original.
+ */
 @Composable
-private fun NotificationItem(record: NotificationRecord, modifier: Modifier = Modifier, unread: Boolean = true) {
+private fun SwipeableNotificationItem(record: NotificationRecord, actions: RowActions, modifier: Modifier = Modifier) {
+    val scope = rememberCoroutineScope()
+    val swipeState = rememberSwipeToDismissBoxState()
+    SwipeToDismissBox(
+        state = swipeState,
+        modifier = modifier.testTag("now_swipe"),
+        backgroundContent = { SwipeBackground(swipeState.dismissDirection) },
+        onDismiss = { value ->
+            when (value) {
+                SwipeToDismissBoxValue.StartToEnd -> actions.onArchive(record)
+                SwipeToDismissBoxValue.EndToStart -> {
+                    // Snooze keeps the row until a time is chosen; spring back and ask.
+                    scope.launch { swipeState.reset() }
+                    actions.onSnoozeRequest(record)
+                }
+                SwipeToDismissBoxValue.Settled -> Unit
+            }
+        },
+    ) {
+        NotificationItem(record, onClick = { actions.onOpen(record) })
+    }
+}
+
+@Composable
+private fun SwipeBackground(direction: SwipeToDismissBoxValue) {
+    val (icon, label, alignment) = when (direction) {
+        SwipeToDismissBoxValue.StartToEnd -> Triple(Icons.Default.Archive, "Archive", Alignment.CenterStart)
+        SwipeToDismissBoxValue.EndToStart -> Triple(Icons.Default.Schedule, "Snooze", Alignment.CenterEnd)
+        SwipeToDismissBoxValue.Settled -> return
+    }
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .clip(RoundedCornerShape(12.dp))
+            .background(MaterialTheme.colorScheme.secondaryContainer)
+            .padding(horizontal = 20.dp),
+        contentAlignment = alignment,
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSecondaryContainer)
+            Text(
+                text = label,
+                modifier = Modifier.padding(start = 8.dp),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSecondaryContainer,
+            )
+        }
+    }
+}
+
+/** Picks the clock time to snooze until; the next occurrence of that time is used. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SnoozeTimeDialog(onConfirm: (hour: Int, minute: Int) -> Unit, onDismiss: () -> Unit) {
+    val initial = remember {
+        Calendar.getInstance().apply { add(Calendar.HOUR_OF_DAY, 1); set(Calendar.MINUTE, 0) }
+    }
+    val pickerState = rememberTimePickerState(
+        initialHour = initial.get(Calendar.HOUR_OF_DAY),
+        initialMinute = 0,
+    )
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        modifier = Modifier.testTag("now_snooze_dialog"),
+        title = { Text("Snooze until") },
+        text = { TimePicker(state = pickerState) },
+        confirmButton = {
+            TextButton(
+                onClick = { onConfirm(pickerState.hour, pickerState.minute) },
+                modifier = Modifier.testTag("now_snooze_confirm"),
+            ) { Text("Snooze") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancel") }
+        },
+    )
+}
+
+@Composable
+private fun NotificationItem(
+    record: NotificationRecord,
+    modifier: Modifier = Modifier,
+    unread: Boolean = true,
+    onClick: (() -> Unit)? = null,
+) {
     NotificationRow(
         lane = record.lane,
         appName = record.appName,
@@ -172,6 +351,7 @@ private fun NotificationItem(record: NotificationRecord, modifier: Modifier = Mo
         time = TimeUtils.formatTime(record.timestamp),
         unread = unread,
         icon = { NotificationIcon(record) },
+        onClick = onClick,
         modifier = modifier.testTag("now_row"),
     )
 }

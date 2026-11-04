@@ -4,7 +4,9 @@ import com.usagecontrol.core.model.NotificationRecord
 import com.usagecontrol.core.model.ProvisionalLane
 import com.usagecontrol.core.ui.theme.Lane
 import java.time.Instant
+import java.time.LocalTime
 import java.time.ZoneId
+import java.time.ZonedDateTime
 
 /*
  * Pure grouping logic for the Now stream: lane mapping, time sections, bundles and search.
@@ -141,4 +143,24 @@ fun filter(rows: List<NotificationRecord>, query: String): List<NotificationReco
             row.text?.contains(q, ignoreCase = true) == true ||
             row.appName.contains(q, ignoreCase = true)
     }
+}
+
+/**
+ * Milliseconds from [now] until the next occurrence of [hour]:[minute] in [zone]: later today
+ * when that time is still ahead, otherwise tomorrow. A time equal to now resolves to
+ * tomorrow, so the result is always positive. DST gaps resolve the way [ZonedDateTime]
+ * does (shifted forward by the gap length).
+ *
+ * @throws IllegalArgumentException when [hour] or [minute] is out of range.
+ */
+fun snoozeDurationUntil(hour: Int, minute: Int, now: Long, zone: ZoneId): Long {
+    require(hour in 0..23) { "hour out of range: $hour" }
+    require(minute in 0..59) { "minute out of range: $minute" }
+    val current = Instant.ofEpochMilli(now).atZone(zone)
+    val time = LocalTime.of(hour, minute)
+    var target = ZonedDateTime.of(current.toLocalDate(), time, zone)
+    if (!target.isAfter(current)) {
+        target = ZonedDateTime.of(current.toLocalDate().plusDays(1), time, zone)
+    }
+    return target.toInstant().toEpochMilli() - now
 }
