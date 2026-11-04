@@ -193,6 +193,56 @@ interface NotificationDao {
     @Query("UPDATE notifications SET userAction = 'NONE', actionTimestamp = NULL WHERE id = :id")
     suspend fun clearUserAction(id: Long): Int
 
+    // -- Apps tab / app profile --
+    // "Dismissed" means the user swiped it away (removalReason CANCEL/CANCEL_ALL), archived it, or,
+    // for legacy v3 rows without a removalReason, userAction DISMISSED. App-side cancels are not
+    // counted. Ongoing and group-summary rows are excluded everywhere.
+
+    /** Per-app alert totals and user-dismissed counts since [since], busiest first. */
+    @Query("""
+        SELECT packageName, MAX(appName) AS appName,
+            COUNT(*) AS total,
+            SUM(CASE WHEN removalReason IN ('CANCEL', 'CANCEL_ALL') OR userAction = 'ARCHIVED'
+                OR (userAction = 'DISMISSED' AND removalReason IS NULL) THEN 1 ELSE 0 END) AS dismissed
+        FROM notifications
+        WHERE timestamp >= :since AND isOngoing = 0 AND isGroupSummary = 0
+        GROUP BY packageName
+        ORDER BY total DESC
+    """)
+    fun appAlertCountsFlow(since: Long): Flow<List<AppAlertCountRow>>
+
+    /** Per-app counts bucketed by local calendar day (yyyy-MM-dd) since [since], for list sparklines. */
+    @Query("""
+        SELECT packageName,
+            strftime('%Y-%m-%d', timestamp / 1000, 'unixepoch', 'localtime') AS day,
+            COUNT(*) AS count
+        FROM notifications
+        WHERE timestamp >= :since AND isOngoing = 0 AND isGroupSummary = 0
+        GROUP BY packageName, day
+    """)
+    fun appDailyCountsFlow(since: Long): Flow<List<AppDayCountRow>>
+
+    /** Raw event times for one app since [since], oldest first: sparkline, hourly bars, time to act. */
+    @Query("""
+        SELECT timestamp, actionTimestamp, removedAt, channelId
+        FROM notifications
+        WHERE packageName = :packageName AND timestamp >= :since
+        AND isOngoing = 0 AND isGroupSummary = 0
+        ORDER BY timestamp ASC
+    """)
+    fun appEventsFlow(packageName: String, since: Long): Flow<List<AppEventRow>>
+
+    /** Alert counts per notification channel for one app since [since]; channelId may be NULL. */
+    @Query("""
+        SELECT channelId, COUNT(*) AS count
+        FROM notifications
+        WHERE packageName = :packageName AND timestamp >= :since
+        AND isOngoing = 0 AND isGroupSummary = 0
+        GROUP BY channelId
+        ORDER BY count DESC
+    """)
+    fun appChannelCountsFlow(packageName: String, since: Long): Flow<List<ChannelCountRow>>
+
     // Hour-of-day distribution of dismissed notifications per app
     @Query("""
         SELECT packageName, appName,
@@ -251,6 +301,31 @@ interface NotificationDao {
 data class AppInfo(
     val packageName: String,
     val appName: String,
+)
+
+data class AppAlertCountRow(
+    val packageName: String,
+    val appName: String,
+    val total: Int,
+    val dismissed: Int,
+)
+
+data class AppDayCountRow(
+    val packageName: String,
+    val day: String,
+    val count: Int,
+)
+
+data class AppEventRow(
+    val timestamp: Long,
+    val actionTimestamp: Long?,
+    val removedAt: Long?,
+    val channelId: String?,
+)
+
+data class ChannelCountRow(
+    val channelId: String?,
+    val count: Int,
 )
 
 data class HourlyDismissRow(

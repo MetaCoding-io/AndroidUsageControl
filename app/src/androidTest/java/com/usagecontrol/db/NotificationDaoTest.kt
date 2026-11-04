@@ -228,4 +228,70 @@ class NotificationDaoTest {
         assertEquals(2, dao.todayInterruptionCount(startOfDay = 1_000L).first())
         assertEquals(0, dao.todayInterruptionCount(startOfDay = 10_000L).first())
     }
+
+    @Test
+    fun appAlertCounts_countsUserDismissalsOnly_excludesOngoingSummaryAndOld() = runBlocking {
+        val swiped = dao.upsertByKey(entity("swiped", timestamp = 2_000L))
+        dao.markRemoved(swiped, "CANCEL", 3_000L)
+        val appCancel = dao.upsertByKey(entity("appCancel", timestamp = 2_000L))
+        dao.markRemoved(appCancel, "APP_CANCEL", 3_000L)
+        val archived = dao.upsertByKey(entity("archived", timestamp = 2_000L))
+        dao.markUserAction(archived, "ARCHIVED", 3_000L)
+        dao.insert(entity(null, timestamp = 2_000L).copy(userAction = "DISMISSED")) // legacy v3
+        dao.upsertByKey(entity("live", timestamp = 2_000L))
+        dao.upsertByKey(entity("old", timestamp = 500L))
+        dao.upsertByKey(entity("ongoing", timestamp = 2_000L, isOngoing = true))
+        dao.upsertByKey(entity("summary", timestamp = 2_000L, isGroupSummary = true))
+        dao.upsertByKey(entity("other", timestamp = 2_000L, pkg = "com.example.mail"))
+
+        val rows = dao.appAlertCountsFlow(since = 1_000L).first()
+
+        assertEquals(listOf("com.example.chat", "com.example.mail"), rows.map { it.packageName })
+        assertEquals(5, rows[0].total)
+        assertEquals(3, rows[0].dismissed)
+        assertEquals(0, rows[1].dismissed)
+    }
+
+    @Test
+    fun appDailyCounts_groupsByPackageAndDay() = runBlocking {
+        dao.upsertByKey(entity("a", timestamp = 2_000L))
+        dao.upsertByKey(entity("b", timestamp = 3_000L))
+        dao.upsertByKey(entity("c", timestamp = 3_000L, pkg = "com.example.mail"))
+
+        val rows = dao.appDailyCountsFlow(since = 1_000L).first()
+
+        assertEquals(2, rows.size)
+        assertEquals(2, rows.single { it.packageName == "com.example.chat" }.count)
+    }
+
+    @Test
+    fun appEvents_returnsTimesForOnePackageOldestFirst() = runBlocking {
+        val late = dao.upsertByKey(entity("late", timestamp = 5_000L).copy(channelId = "msg"))
+        dao.markRemoved(late, "CLICK", 6_000L)
+        dao.upsertByKey(entity("early", timestamp = 2_000L))
+        dao.upsertByKey(entity("old", timestamp = 500L))
+        dao.upsertByKey(entity("other", timestamp = 3_000L, pkg = "com.example.mail"))
+
+        val rows = dao.appEventsFlow("com.example.chat", since = 1_000L).first()
+
+        assertEquals(listOf(2_000L, 5_000L), rows.map { it.timestamp })
+        assertNull(rows[0].actionTimestamp)
+        assertEquals(6_000L, rows[1].actionTimestamp)
+        assertEquals(6_000L, rows[1].removedAt)
+        assertEquals("msg", rows[1].channelId)
+    }
+
+    @Test
+    fun appChannelCounts_groupsIncludingNullChannel() = runBlocking {
+        dao.upsertByKey(entity("a", timestamp = 2_000L).copy(channelId = "msg"))
+        dao.upsertByKey(entity("b", timestamp = 2_000L).copy(channelId = "msg"))
+        dao.upsertByKey(entity("c", timestamp = 2_000L))
+
+        val rows = dao.appChannelCountsFlow("com.example.chat", since = 1_000L).first()
+
+        assertEquals(2, rows.size)
+        assertEquals("msg", rows[0].channelId)
+        assertEquals(2, rows[0].count)
+        assertNull(rows[1].channelId)
+    }
 }
