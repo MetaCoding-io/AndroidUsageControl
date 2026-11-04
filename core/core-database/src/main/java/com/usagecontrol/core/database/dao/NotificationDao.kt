@@ -3,6 +3,7 @@ package com.usagecontrol.core.database.dao
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 import com.usagecontrol.core.database.entity.NotificationEntity
 import kotlinx.coroutines.flow.Flow
@@ -58,13 +59,97 @@ interface NotificationDao {
     @Query("SELECT COUNT(*) FROM notifications")
     suspend fun getCount(): Int
 
+    // -- v4 key identity --
+
+    /** Id of the live (not yet removed) history row for this StatusBarNotification key. */
+    @Query("SELECT id FROM notifications WHERE `key` = :key AND removedAt IS NULL LIMIT 1")
+    suspend fun findIdByKey(key: String): Long?
+
+    /** Detach a removed row from its key so a re-post with the same key starts a new row. */
+    @Query("UPDATE notifications SET `key` = NULL WHERE `key` = :key AND removedAt IS NOT NULL")
+    suspend fun releaseRemovedKey(key: String): Int
+
+    @Query("""
+        UPDATE notifications SET
+            title = :title, text = :text, subText = :subText, timestamp = :timestamp,
+            whenMs = :whenMs, flags = :flags, importance = :importance,
+            smallIconPath = COALESCE(:smallIconPath, smallIconPath),
+            largeIconPath = COALESCE(:largeIconPath, largeIconPath),
+            messagesJson = :messagesJson, actionsJson = :actionsJson,
+            provisionalLane = COALESCE(:provisionalLane, provisionalLane),
+            updateCount = updateCount + 1
+        WHERE id = :id
+    """)
+    suspend fun applyUpdate(
+        id: Long,
+        title: String?,
+        text: String?,
+        subText: String?,
+        timestamp: Long,
+        whenMs: Long,
+        flags: Int,
+        importance: Int,
+        smallIconPath: String?,
+        largeIconPath: String?,
+        messagesJson: String?,
+        actionsJson: String?,
+        provisionalLane: String?,
+    ): Int
+
+    /**
+     * Insert a new row for an unseen key, or update the existing live row for that key
+     * (content, time, icons) and increment updateCount. Returns the row id. Rows without
+     * a key are always inserted.
+     */
+    @Transaction
+    suspend fun upsertByKey(entity: NotificationEntity): Long {
+        val key = entity.key ?: return insert(entity)
+        val existingId = findIdByKey(key)
+        if (existingId == null) {
+            releaseRemovedKey(key)
+            return insert(entity.copy(id = 0, updateCount = 0))
+        }
+        applyUpdate(
+            id = existingId,
+            title = entity.title,
+            text = entity.text,
+            subText = entity.subText,
+            timestamp = entity.timestamp,
+            whenMs = entity.whenMs,
+            flags = entity.flags,
+            importance = entity.importance,
+            smallIconPath = entity.smallIconPath,
+            largeIconPath = entity.largeIconPath,
+            messagesJson = entity.messagesJson,
+            actionsJson = entity.actionsJson,
+            provisionalLane = entity.provisionalLane,
+        )
+        return existingId
+    }
+
+    /**
+     * Record removal reason/time. userAction becomes OPENED for CLICK, DISMISSED otherwise,
+     * but only if no action was recorded yet (e.g. AUTO_DISMISSED is preserved).
+     */
+    @Query("""
+        UPDATE notifications SET
+            removalReason = :reason,
+            removedAt = :timestamp,
+            userAction = CASE WHEN userAction = 'NONE'
+                THEN (CASE WHEN :reason = 'CLICK' THEN 'OPENED' ELSE 'DISMISSED' END)
+                ELSE userAction END,
+            actionTimestamp = CASE WHEN userAction = 'NONE' THEN :timestamp ELSE actionTimestamp END
+        WHERE id = :id
+    """)
+    suspend fun markRemoved(id: Long, reason: String, timestamp: Long): Int
+
     // Hour-of-day distribution of dismissed notifications per app
     @Query("""
         SELECT packageName, appName,
             CAST(strftime('%H', timestamp / 1000, 'unixepoch', 'localtime') AS INTEGER) as hour,
             COUNT(*) as count
         FROM notifications
-        WHERE userAction = 'DISMISSED' AND timestamp >= :sinceTimestamp
+        WHERE userAction = 'DISMISSED' AND isOngoing = 0 AND timestamp >= :sinceTimestamp
         GROUP BY packageName, hour
         ORDER BY packageName, hour
     """)
@@ -79,7 +164,7 @@ interface NotificationDao {
             SUM(CASE WHEN userAction = 'AUTO_DISMISSED' THEN 1 ELSE 0 END) as autoDismissedCount,
             AVG(CASE WHEN actionTimestamp IS NOT NULL THEN actionTimestamp - timestamp ELSE NULL END) as avgTimeToActionMs
         FROM notifications
-        WHERE timestamp >= :sinceTimestamp
+        WHERE isOngoing = 0 AND timestamp >= :sinceTimestamp
         GROUP BY packageName
         ORDER BY totalNotifications DESC
     """)
@@ -93,7 +178,7 @@ interface NotificationDao {
             SUM(CASE WHEN userAction = 'OPENED' THEN 1 ELSE 0 END) as opened,
             SUM(CASE WHEN userAction = 'AUTO_DISMISSED' THEN 1 ELSE 0 END) as autoDismissed
         FROM notifications
-        WHERE timestamp >= :sinceTimestamp
+        WHERE isOngoing = 0 AND timestamp >= :sinceTimestamp
         GROUP BY date
         ORDER BY date ASC
     """)
@@ -108,7 +193,7 @@ interface NotificationDao {
             SUM(CASE WHEN userAction = 'NONE' THEN 1 ELSE 0 END) as pending,
             COUNT(*) as total
         FROM notifications
-        WHERE timestamp >= :sinceTimestamp
+        WHERE isOngoing = 0 AND timestamp >= :sinceTimestamp
     """)
     suspend fun getActionBreakdown(sinceTimestamp: Long): ActionBreakdownRow
 }

@@ -9,7 +9,7 @@
 
 ## Slices
 
-- [ ] **S01: Toolchain and theme** `risk:high` `depends:[]`
+- [x] **S01: Toolchain and theme** `risk:high` `depends:[]`
   > After this: Launcher shows Doorman with LED-dot icon; preview gallery renders every shared component in dark and light
 
 - [ ] **S02: Listener foundation** `risk:high` `depends:[]`
@@ -24,4 +24,4 @@
 ## Boundary Map
 
 Not provided.
-<!-- gsd:state-version=25:1 -->
+<!-- gsd:state-version=85:1 -->

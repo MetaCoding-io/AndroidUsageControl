@@ -3,6 +3,7 @@ package com.usagecontrol.core.database
 import android.content.Context
 import androidx.room.Room
 import com.usagecontrol.core.database.dao.ContextSnapshotDao
+import com.usagecontrol.core.database.dao.LiveNotificationDao
 import com.usagecontrol.core.database.dao.NotificationDao
 import com.usagecontrol.core.database.dao.RuleDao
 import com.usagecontrol.core.database.dao.SoundPresetDao
@@ -30,6 +31,7 @@ object DatabaseModule {
             .addMigrations(
                 UsageControlDatabase.MIGRATION_1_2,
                 UsageControlDatabase.MIGRATION_2_3,
+                UsageControlDatabase.MIGRATION_3_4,
             )
             .build()
     }
@@ -51,4 +53,7 @@ object DatabaseModule {
 
     @Provides
     fun provideSuggestionDao(db: UsageControlDatabase): SuggestionDao = db.suggestionDao()
+
+    @Provides
+    fun provideLiveNotificationDao(db: UsageControlDatabase): LiveNotificationDao = db.liveNotificationDao()
 }

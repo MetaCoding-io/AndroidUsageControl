@@ -13,14 +13,15 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @Composable
@@ -129,21 +130,22 @@ private fun PermissionStepContent(
     modifier: Modifier = Modifier,
 ) {
     // Priming content per step (PERM-01) -- user-facing strings in composable, not ViewModel
+    val appName = stringResource(R.string.onboarding_app_name)
     val (title, explanation, hint) = when (step) {
         PermissionStep.NotificationAccess -> Triple(
             "Notification Access",
-            "This lets Usage Control read your notifications so it can track which apps notify you most, apply your notification rules, and show you patterns over time.",
-            "You'll be taken to your device settings. Find \"Usage Control\" in the list and enable it.",
+            stringResource(R.string.onboarding_perm_notification_explanation, appName),
+            stringResource(R.string.onboarding_perm_settings_hint, appName),
         )
         PermissionStep.UsageAccess -> Triple(
             "Usage Access",
-            "This lets Usage Control see how long you use each app so it can show your screen time, enforce time limits you set, and track your usage trends.",
-            "You'll be taken to your device settings. Find \"Usage Control\" in the list and enable it.",
+            stringResource(R.string.onboarding_perm_usage_explanation, appName),
+            stringResource(R.string.onboarding_perm_settings_hint, appName),
         )
         PermissionStep.DndAccess -> Triple(
             "Do Not Disturb Access",
-            "This lets Usage Control change your sound and Do Not Disturb settings automatically when your rules and presets are triggered.",
-            "You'll be taken to your device settings. Find \"Usage Control\" in the list and enable it.",
+            stringResource(R.string.onboarding_perm_dnd_explanation, appName),
+            stringResource(R.string.onboarding_perm_settings_hint, appName),
         )
     }
 

@@ -20,6 +20,7 @@ junitExt = "1.1.5"
 espresso = "3.5.1"
 androidxTestRunner = "1.5.2"
 androidxTestCore = "1.5.0"
+kotlinxSerialization = "1.8.1"
 
 [libraries]
 # AndroidX Core
@@ -56,6 +57,8 @@ room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
 room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
 room-testing = { module = "androidx.room:room-testing", version.ref = "room" }
+# Aligns app runtime with room-migration (room-testing) so androidTest consistent resolution does not pin 1.7.3
+kotlinx-serialization-bom = { module = "org.jetbrains.kotlinx:kotlinx-serialization-bom", version.ref = "kotlinxSerialization" }
 
 # Coroutines
 coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }

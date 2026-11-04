@@ -1,10 +1,11 @@
 # Codebase Map
 
-Generated: 2026-11-04T04:35:27Z | Files: 124 | Described: 0/124
-<!-- gsd:codebase-meta {"generatedAt":"2026-11-04T04:35:27Z","fingerprint":"ed175421eb1f1d5dfb079f6056df22de3227034f","fileCount":124,"truncated":false} -->
+Generated: 2026-11-04T05:55:39Z | Files: 182 | Described: 0/182
+<!-- gsd:codebase-meta {"generatedAt":"2026-11-04T05:55:39Z","fingerprint":"0e161416b11b2d70ac61303106fbaee876dcb9ab","fileCount":182,"truncated":false} -->
 
 ### (root)/
 - `.gitignore`
+- `AndroidUsageControl.code-workspace`
 - `build.gradle.kts`
 - `gradle.properties`
 - `gradlew`
@@ -12,6 +13,56 @@ Generated: 2026-11-04T04:35:27Z | Files: 124 | Described: 0/124
 - `PROJECT.md`
 - `README.md`
 - `settings.gradle.kts`
+
+### .archive/planning/
+- `.archive/planning/config.json`
+- `.archive/planning/PROJECT.md`
+- `.archive/planning/REQUIREMENTS.md`
+- `.archive/planning/ROADMAP.md`
+- `.archive/planning/STATE.md`
+
+### .archive/planning/codebase/
+- `.archive/planning/codebase/ARCHITECTURE.md`
+- `.archive/planning/codebase/CONCERNS.md`
+- `.archive/planning/codebase/CONVENTIONS.md`
+- `.archive/planning/codebase/INTEGRATIONS.md`
+- `.archive/planning/codebase/STACK.md`
+- `.archive/planning/codebase/STRUCTURE.md`
+- `.archive/planning/codebase/TESTING.md`
+
+### .archive/planning/phases/01-foundation/
+- `.archive/planning/phases/01-foundation/01-01-PLAN.md`
+- `.archive/planning/phases/01-foundation/01-01-SUMMARY.md`
+- `.archive/planning/phases/01-foundation/01-02-PLAN.md`
+- `.archive/planning/phases/01-foundation/01-02-SUMMARY.md`
+- `.archive/planning/phases/01-foundation/01-RESEARCH.md`
+- `.archive/planning/phases/01-foundation/01-VERIFICATION.md`
+
+### .archive/planning/phases/02-permission-walkthrough/
+- `.archive/planning/phases/02-permission-walkthrough/02-01-PLAN.md`
+- `.archive/planning/phases/02-permission-walkthrough/02-01-SUMMARY.md`
+- `.archive/planning/phases/02-permission-walkthrough/02-02-PLAN.md`
+- `.archive/planning/phases/02-permission-walkthrough/02-02-SUMMARY.md`
+- `.archive/planning/phases/02-permission-walkthrough/02-RESEARCH.md`
+- `.archive/planning/phases/02-permission-walkthrough/02-VERIFICATION.md`
+
+### .archive/planning/phases/03-welcome-tour-and-quick-setup/
+- `.archive/planning/phases/03-welcome-tour-and-quick-setup/03-01-PLAN.md`
+- `.archive/planning/phases/03-welcome-tour-and-quick-setup/03-01-SUMMARY.md`
+- `.archive/planning/phases/03-welcome-tour-and-quick-setup/03-02-PLAN.md`
+- `.archive/planning/phases/03-welcome-tour-and-quick-setup/03-02-SUMMARY.md`
+- `.archive/planning/phases/03-welcome-tour-and-quick-setup/03-RESEARCH.md`
+- `.archive/planning/phases/03-welcome-tour-and-quick-setup/03-VERIFICATION.md`
+
+### .archive/planning/research/
+- `.archive/planning/research/ARCHITECTURE.md`
+- `.archive/planning/research/DESIGN-REVIEW.html`
+- `.archive/planning/research/DESIGN-REVIEW.md`
+- `.archive/planning/research/DOORMAN-MILESTONES.md`
+- `.archive/planning/research/FEATURES.md`
+- `.archive/planning/research/PITFALLS.md`
+- `.archive/planning/research/STACK.md`
+- `.archive/planning/research/SUMMARY.md`
 
 ### .maestro/
 - `.maestro/config.yaml`
@@ -49,6 +100,14 @@ Generated: 2026-11-04T04:35:27Z | Files: 124 | Described: 0/124
 ### app/src/main/java/com/usagecontrol/navigation/
 - `app/src/main/java/com/usagecontrol/navigation/AppNavigation.kt`
 
+### app/src/main/res/drawable/
+- `app/src/main/res/drawable/ic_launcher_background.xml`
+- `app/src/main/res/drawable/ic_launcher_foreground.xml`
+- `app/src/main/res/drawable/ic_launcher_monochrome.xml`
+
+### app/src/main/res/mipmap-anydpi-v26/
+- `app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml`
+
 ### app/src/main/res/values/
 - `app/src/main/res/values/strings.xml`
 - `app/src/main/res/values/themes.xml`
@@ -67,6 +126,9 @@ Generated: 2026-11-04T04:35:27Z | Files: 124 | Described: 0/124
 
 ### core/core-database/
 - `core/core-database/build.gradle.kts`
+
+### core/core-database/schemas/com.usagecontrol.core.database.UsageControlDatabase/
+- `core/core-database/schemas/com.usagecontrol.core.database.UsageControlDatabase/3.json`
 
 ### core/core-database/src/main/java/com/usagecontrol/core/database/
 - `core/core-database/src/main/java/com/usagecontrol/core/database/DatabaseModule.kt`
@@ -116,12 +178,28 @@ Generated: 2026-11-04T04:35:27Z | Files: 124 | Described: 0/124
 ### core/core-ui/
 - `core/core-ui/build.gradle.kts`
 
+### core/core-ui/licenses/
+- `core/core-ui/licenses/DMMono-OFL.txt`
+- `core/core-ui/licenses/Manrope-OFL.txt`
+
 ### core/core-ui/src/main/java/com/usagecontrol/core/ui/component/
 - `core/core-ui/src/main/java/com/usagecontrol/core/ui/component/Charts.kt`
 - `core/core-ui/src/main/java/com/usagecontrol/core/ui/component/CommonComponents.kt`
+- `core/core-ui/src/main/java/com/usagecontrol/core/ui/component/ComponentGallery.kt`
+- `core/core-ui/src/main/java/com/usagecontrol/core/ui/component/DoormanComponents.kt`
 
 ### core/core-ui/src/main/java/com/usagecontrol/core/ui/theme/
+- `core/core-ui/src/main/java/com/usagecontrol/core/ui/theme/Color.kt`
+- `core/core-ui/src/main/java/com/usagecontrol/core/ui/theme/LaneColors.kt`
+- `core/core-ui/src/main/java/com/usagecontrol/core/ui/theme/Shape.kt`
 - `core/core-ui/src/main/java/com/usagecontrol/core/ui/theme/Theme.kt`
+- `core/core-ui/src/main/java/com/usagecontrol/core/ui/theme/Type.kt`
+
+### core/core-ui/src/test/java/com/usagecontrol/core/ui/component/
+- `core/core-ui/src/test/java/com/usagecontrol/core/ui/component/BundleCountLabelTest.kt`
+
+### core/core-ui/src/test/java/com/usagecontrol/core/ui/theme/
+- `core/core-ui/src/test/java/com/usagecontrol/core/ui/theme/LaneColorsTest.kt`
 
 ### feature/feature-learning/
 - `feature/feature-learning/build.gradle.kts`
@@ -159,6 +237,9 @@ Generated: 2026-11-04T04:35:27Z | Files: 124 | Described: 0/124
 - `feature/feature-onboarding/src/main/java/com/usagecontrol/feature/onboarding/QuickSetupViewModel.kt`
 - `feature/feature-onboarding/src/main/java/com/usagecontrol/feature/onboarding/WelcomeScreen.kt`
 
+### feature/feature-onboarding/src/main/res/values/
+- `feature/feature-onboarding/src/main/res/values/strings.xml`
+
 ### feature/feature-rules/
 - `feature/feature-rules/build.gradle.kts`
 
@@ -190,6 +271,9 @@ Generated: 2026-11-04T04:35:27Z | Files: 124 | Described: 0/124
 - `feature/feature-settings/src/main/java/com/usagecontrol/feature/settings/SettingsScreen.kt`
 - `feature/feature-settings/src/main/java/com/usagecontrol/feature/settings/SettingsViewModel.kt`
 
+### feature/feature-settings/src/main/res/values/
+- `feature/feature-settings/src/main/res/values/strings.xml`
+
 ### gradle/
 - `gradle/libs.versions.toml`
 
@@ -210,6 +294,9 @@ Generated: 2026-11-04T04:35:27Z | Files: 124 | Described: 0/124
 - `service/service-context/src/main/java/com/usagecontrol/service/context/SoundPresetApplier.kt`
 - `service/service-context/src/main/java/com/usagecontrol/service/context/SoundProfileExecutor.kt`
 
+### service/service-context/src/main/res/values/
+- `service/service-context/src/main/res/values/strings.xml`
+
 ### service/service-context/src/main/res/xml/
 - `service/service-context/src/main/res/xml/device_admin.xml`
 
@@ -224,3 +311,6 @@ Generated: 2026-11-04T04:35:27Z | Files: 124 | Described: 0/124
 
 ### service/service-usage/src/main/java/com/usagecontrol/service/usage/
 - `service/service-usage/src/main/java/com/usagecontrol/service/usage/UsageMonitorService.kt`
+
+### service/service-usage/src/main/res/values/
+- `service/service-usage/src/main/res/values/strings.xml`

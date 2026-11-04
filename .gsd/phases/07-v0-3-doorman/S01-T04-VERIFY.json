@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "taskId": "T04",
+  "unitId": "M007/S01/T04",
+  "timestamp": 1793770110150,
+  "passed": true,
+  "discoverySource": "task-plan",
+  "checks": [
+    {
+      "command": "./gradlew :core:core-ui:compileDebugKotlin && ./gradlew assembleDebug && ./gradlew check",
+      "exitCode": 0,
+      "durationMs": 7697,
+      "verdict": "pass"
+    }
+  ]
+}

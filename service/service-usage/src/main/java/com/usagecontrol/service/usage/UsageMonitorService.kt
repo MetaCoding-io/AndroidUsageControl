@@ -206,7 +206,7 @@ class UsageMonitorService : Service() {
 
     private fun buildNotification(): Notification {
         return Notification.Builder(this, CHANNEL_ID)
-            .setContentTitle("Usage Control")
+            .setContentTitle(getString(R.string.usage_service_notification_title))
             .setContentText("Monitoring app usage")
             .setSmallIcon(android.R.drawable.ic_menu_recent_history)
             .setOngoing(true)

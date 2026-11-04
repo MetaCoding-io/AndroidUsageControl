@@ -135,7 +135,7 @@ class ContextMonitorService : Service() {
 
     private fun buildNotification(): Notification {
         return Notification.Builder(this, CHANNEL_ID)
-            .setContentTitle("Usage Control")
+            .setContentTitle(getString(R.string.context_service_notification_title))
             .setContentText("Monitoring device context")
             .setSmallIcon(android.R.drawable.ic_menu_compass)
             .setOngoing(true)

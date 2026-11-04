@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "taskId": "T02",
+  "unitId": "M007/S02/T02",
+  "timestamp": 1793772841000,
+  "passed": true,
+  "discoverySource": "task-plan",
+  "checks": [
+    {
+      "command": "./gradlew :app:assembleDebug :app:assembleDebugAndroidTest && test -f core/core-database/schemas/com.usagecontrol.core.database.UsageControlDatabase/4.json",
+      "exitCode": 0,
+      "durationMs": 3111,
+      "verdict": "pass"
+    }
+  ]
+}

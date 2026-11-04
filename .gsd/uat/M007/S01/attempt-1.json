@@ -1,0 +1,148 @@
+{
+  "runId": "uat:M007:S01:attempt-1",
+  "attempt": 1,
+  "milestoneId": "M007",
+  "sliceId": "S01",
+  "uatType": "runtime-executable",
+  "verdict": "PARTIAL",
+  "gateVerdict": "flag",
+  "evaluatedAt": "2026-11-04T05:30:27.766Z",
+  "worktreeRoot": "/home/james/Code/AndroidUsageControl",
+  "sourceRevision": "sha256:e08977efff692a7d6b9abdc80a6dd8d733206f4ecd0a591802a2d962ffbde66d",
+  "browserToolsPresented": false,
+  "modePolicy": {
+    "browserTools": false,
+    "partialEligible": false,
+    "passWithHumanFollowUp": false,
+    "requiredAnyModes": [
+      "runtime"
+    ]
+  },
+  "checks": [
+    {
+      "id": "build-check",
+      "description": "./gradlew assembleDebug check exits 0",
+      "mode": "runtime",
+      "result": "PASS",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "f383391c-1cb4-4135-bfb8-05b6532e5746"
+        }
+      ],
+      "notes": "EXIT=0"
+    },
+    {
+      "id": "label-doorman",
+      "description": "Installed app label reads Doorman",
+      "mode": "human-follow-up",
+      "result": "NEEDS-HUMAN",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "2946fbb5-28cb-4f21-8745-baf89257073e"
+        }
+      ],
+      "notes": "out-of-surface-tool: adb: command not found. app_name=Doorman in strings.xml. A human should install the APK and check the launcher label."
+    },
+    {
+      "id": "launcher-icon",
+      "description": "Amber LED-dot icon on ink; monochrome themed icon renders",
+      "mode": "human-follow-up",
+      "result": "NEEDS-HUMAN",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "2946fbb5-28cb-4f21-8745-baf89257073e"
+        }
+      ],
+      "notes": "out-of-surface-tool: no adb/device. The adaptive icon declares <monochrome>."
+    },
+    {
+      "id": "launch-theme",
+      "description": "App launches without a crash using the Doorman dark theme",
+      "mode": "human-follow-up",
+      "result": "NEEDS-HUMAN",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "2946fbb5-28cb-4f21-8745-baf89257073e"
+        }
+      ],
+      "notes": "out-of-surface-tool: no adb/device. MainActivity uses DoormanTheme and the manifest uses Theme.Doorman."
+    },
+    {
+      "id": "gallery-previews",
+      "description": "ComponentGallery previews render dark/light with distinct lane colours",
+      "mode": "human-follow-up",
+      "result": "NEEDS-HUMAN",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "f383391c-1cb4-4135-bfb8-05b6532e5746"
+        }
+      ],
+      "notes": "The previews compile but rendering them requires Android Studio.",
+      "nonAutomatable": true
+    }
+  ],
+  "presentation": {
+    "surface": "mcp",
+    "presentedTools": [
+      "gsd_uat_exec",
+      "gsd_uat_result_save",
+      "gsd_resume",
+      "gsd_milestone_status",
+      "gsd_journal_query",
+      "find",
+      "glob",
+      "grep",
+      "ls",
+      "read"
+    ],
+    "blockedTools": [
+      {
+        "name": "edit",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "write",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "gsd_exec",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "gsd_summary_save",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "gsd_save_gate_result",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "search-the-web",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "WebSearch",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "Bash",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "Write",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "Edit",
+        "reason": "forbidden during run-uat"
+      }
+    ],
+    "toolPresentationPlanId": "run-uat/default-v1"
+  },
+  "notes": "assembleDebug check passed and the label/icon/theme artifacts are present, but the device steps could not run because adb is not installed on the host (out-of-surface-tool)."
+}

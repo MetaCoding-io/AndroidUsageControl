@@ -94,6 +94,9 @@ dependencies {
     implementation(libs.hilt.work)
     ksp(libs.hilt.work.compiler)
 
+    // kotlinx-serialization alignment (room-testing needs >= 1.8.1 at runtime)
+    implementation(platform(libs.kotlinx.serialization.bom))
+
     // WorkManager
     implementation(libs.work.runtime.ktx)
 
@@ -104,4 +107,6 @@ dependencies {
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.test.core)
     androidTestImplementation(libs.room.testing)
+    androidTestImplementation(libs.room.runtime)
+    androidTestImplementation(libs.coroutines.core)
 }
