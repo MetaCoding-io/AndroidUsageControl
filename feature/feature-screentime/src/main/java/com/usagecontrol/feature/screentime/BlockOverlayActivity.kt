@@ -17,7 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.usagecontrol.core.ui.theme.UsageControlTheme
+import com.usagecontrol.core.ui.theme.DoormanTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 
@@ -44,7 +44,7 @@ class BlockOverlayActivity : ComponentActivity() {
         val usedMinutes = intent.getIntExtra("usedMinutes", 0)
 
         setContent {
-            UsageControlTheme {
+            DoormanTheme {
                 if (blockType == "hard") {
                     HardBlockScreen(
                         appName = appName,
