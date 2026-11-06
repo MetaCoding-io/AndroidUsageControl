@@ -31,6 +31,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxState
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -135,7 +136,7 @@ fun NowScreen(viewModel: NowViewModel = hiltViewModel()) {
 }
 
 /** Callbacks shared by every swipeable stream row. */
-private class RowActions(
+internal class RowActions(
     val onOpen: (NotificationRecord) -> Unit,
     val onArchive: (NotificationRecord) -> Unit,
     val onSnoozeRequest: (NotificationRecord) -> Unit,
@@ -258,9 +259,13 @@ private fun LazyListScope.bundleItems(
  * snooze time and springs back; tap opens the original.
  */
 @Composable
-private fun SwipeableNotificationItem(record: NotificationRecord, actions: RowActions, modifier: Modifier = Modifier) {
+internal fun SwipeableNotificationItem(
+    record: NotificationRecord,
+    actions: RowActions,
+    modifier: Modifier = Modifier,
+    swipeState: SwipeToDismissBoxState = rememberSwipeToDismissBoxState(),
+) {
     val scope = rememberCoroutineScope()
-    val swipeState = rememberSwipeToDismissBoxState()
     SwipeToDismissBox(
         state = swipeState,
         modifier = modifier.testTag("now_swipe"),
