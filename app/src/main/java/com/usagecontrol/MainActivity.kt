@@ -206,6 +206,7 @@ fun UsageControlAppContent(
                 composable(AppRoutes.INSIGHTS) { LearningScreen() }
                 composable(AppRoutes.SETTINGS) {
                     SettingsScreen(
+                        onBack = { navController.popBackStack() },
                         onRevisitTour = { navController.navigate(AppRoutes.TOUR) },
                     )
                 }

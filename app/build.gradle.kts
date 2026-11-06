@@ -111,4 +111,8 @@ dependencies {
     androidTestImplementation(libs.room.testing)
     androidTestImplementation(libs.room.runtime)
     androidTestImplementation(libs.coroutines.core)
+    androidTestImplementation(libs.datastore.preferences)
+    androidTestImplementation(platform(libs.compose.bom))
+    androidTestImplementation(libs.compose.ui.test.junit4)
+    debugImplementation(libs.compose.ui.test.manifest)
 }
