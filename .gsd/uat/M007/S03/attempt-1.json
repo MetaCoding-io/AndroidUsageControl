@@ -1,0 +1,225 @@
+{
+  "runId": "uat:M007:S03:attempt-1",
+  "attempt": 1,
+  "milestoneId": "M007",
+  "sliceId": "S03",
+  "uatType": "runtime-executable",
+  "verdict": "PARTIAL",
+  "gateVerdict": "flag",
+  "evaluatedAt": "2026-11-04T06:41:27.542Z",
+  "worktreeRoot": "/home/james/Code/AndroidUsageControl",
+  "sourceRevision": "sha256:d7eca644a71838e9d29c1b034994e6014af8222964fbf7367e1745456982f703",
+  "browserToolsPresented": false,
+  "modePolicy": {
+    "browserTools": false,
+    "partialEligible": false,
+    "passWithHumanFollowUp": false,
+    "requiredAnyModes": [
+      "runtime"
+    ]
+  },
+  "checks": [
+    {
+      "id": "precondition-device",
+      "description": "Debug APK installed on a device with notification listener access granted",
+      "mode": "runtime",
+      "result": "FAIL",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "5e0ce46f-0eb9-4f2b-9c5b-6016a2d5043e"
+        }
+      ],
+      "notes": "adb: command not found. No device. app-debug.apk exists in app/build/outputs/apk/debug."
+    },
+    {
+      "id": "static-substitute",
+      "description": "Static substitute: log/snackbar strings exist in source",
+      "mode": "artifact",
+      "result": "PASS",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "8ed5c601-be1a-48ab-8d53-8c9eeb498749"
+        }
+      ],
+      "notes": "Found the snoozed log in NotificationActionsImpl.kt and the open-intent-cancelled path. This does not stand in for the runtime checks."
+    },
+    {
+      "id": "step1-shell",
+      "description": "Bottom bar shows exactly Now, Apps, Modes; gear opens Settings",
+      "mode": "human-follow-up",
+      "result": "NEEDS-HUMAN",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "5e0ce46f-0eb9-4f2b-9c5b-6016a2d5043e"
+        }
+      ],
+      "notes": "Needs a device (blocked: no adb/device)."
+    },
+    {
+      "id": "step2-post",
+      "description": "Posted notification appears in Now with icon and lane dot, hero count increments",
+      "mode": "human-follow-up",
+      "result": "NEEDS-HUMAN",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "5e0ce46f-0eb9-4f2b-9c5b-6016a2d5043e"
+        }
+      ],
+      "notes": "Needs a device."
+    },
+    {
+      "id": "step3-search",
+      "description": "Search 'hello' filters to matching row",
+      "mode": "human-follow-up",
+      "result": "NEEDS-HUMAN",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "5e0ce46f-0eb9-4f2b-9c5b-6016a2d5043e"
+        }
+      ],
+      "notes": "Needs a device."
+    },
+    {
+      "id": "step4-undo",
+      "description": "Swipe right shows Undo snackbar; Undo within 10s restores row and system notification",
+      "mode": "human-follow-up",
+      "result": "NEEDS-HUMAN",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "5e0ce46f-0eb9-4f2b-9c5b-6016a2d5043e"
+        }
+      ],
+      "notes": "Needs a device."
+    },
+    {
+      "id": "step5-archive",
+      "description": "Swipe right, wait 10s: system notification cancelled, logcat logs 'cancelled'",
+      "mode": "human-follow-up",
+      "result": "NEEDS-HUMAN",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "5e0ce46f-0eb9-4f2b-9c5b-6016a2d5043e"
+        }
+      ],
+      "notes": "Needs a device."
+    },
+    {
+      "id": "step6-snooze",
+      "description": "Swipe left opens TimePicker; confirm logs 'snoozed' and removes from shade",
+      "mode": "human-follow-up",
+      "result": "NEEDS-HUMAN",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "5e0ce46f-0eb9-4f2b-9c5b-6016a2d5043e"
+        }
+      ],
+      "notes": "Needs a device."
+    },
+    {
+      "id": "step7-open",
+      "description": "Tap row opens original app; fallback launch activity + 'Original no longer available' snackbar",
+      "mode": "human-follow-up",
+      "result": "NEEDS-HUMAN",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "5e0ce46f-0eb9-4f2b-9c5b-6016a2d5043e"
+        }
+      ],
+      "notes": "Needs a device."
+    },
+    {
+      "id": "edge-revoked",
+      "description": "With listener access revoked, actions show error snackbar without crash",
+      "mode": "human-follow-up",
+      "result": "NEEDS-HUMAN",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "5e0ce46f-0eb9-4f2b-9c5b-6016a2d5043e"
+        }
+      ],
+      "notes": "Needs a device."
+    },
+    {
+      "id": "edge-recently-dismissed",
+      "description": "Dismissed notifications appear under Recently dismissed for 1 hour",
+      "mode": "human-follow-up",
+      "result": "NEEDS-HUMAN",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "5e0ce46f-0eb9-4f2b-9c5b-6016a2d5043e"
+        }
+      ],
+      "notes": "Needs a device."
+    }
+  ],
+  "presentation": {
+    "surface": "mcp",
+    "presentedTools": [
+      "gsd_uat_exec",
+      "gsd_uat_result_save",
+      "gsd_resume",
+      "gsd_milestone_status",
+      "gsd_journal_query",
+      "find",
+      "glob",
+      "grep",
+      "ls",
+      "read"
+    ],
+    "blockedTools": [
+      {
+        "name": "edit",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "write",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "gsd_exec",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "gsd_summary_save",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "gsd_save_gate_result",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "search-the-web",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "WebSearch",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "Bash",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "Write",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "Edit",
+        "reason": "forbidden during run-uat"
+      }
+    ],
+    "toolPresentationPlanId": "run-uat/default-v1"
+  },
+  "notes": "This host has no adb and no connected device, so none of the device steps could run. The debug APK exists, and source checks found the snooze and open log paths. Every runtime step needs a human with a device."
+}

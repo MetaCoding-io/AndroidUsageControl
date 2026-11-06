@@ -146,4 +146,4 @@ Migration on real data: install the current v0.2 build (versionCode 1, applicati
 - `adb shell cmd notification` subcommand names (post/cancel) vary by Android version; run `adb shell cmd notification help` on the target device first.
 - The Phase 5 plan doubles as the design doc. LSTN-09 provisional lane categories may need product input; the classifier is a pure function so this is isolated.
 - Parcelled Notification storage (05-03 T2) is needed only for v0.4 recoverBuilder; can be deferred without failing S02 criteria.
-<!-- gsd:state-version=80:1 -->
+<!-- gsd:state-version=110:1 -->

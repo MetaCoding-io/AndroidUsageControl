@@ -1,7 +1,7 @@
 # Codebase Map
 
-Generated: 2026-11-04T05:55:39Z | Files: 182 | Described: 0/182
-<!-- gsd:codebase-meta {"generatedAt":"2026-11-04T05:55:39Z","fingerprint":"0e161416b11b2d70ac61303106fbaee876dcb9ab","fileCount":182,"truncated":false} -->
+Generated: 2026-11-06T00:37:28Z | Files: 219 | Described: 0/219
+<!-- gsd:codebase-meta {"generatedAt":"2026-11-06T00:37:28Z","fingerprint":"1ce472bfb2e0a28814dfefe9882e7dcdb4c2e792","fileCount":219,"truncated":false} -->
 
 ### (root)/
 - `.gitignore`
@@ -85,6 +85,10 @@ Generated: 2026-11-04T05:55:39Z | Files: 182 | Described: 0/182
 - `app/build.gradle.kts`
 - `app/proguard-rules.pro`
 
+### app/src/androidTest/java/com/usagecontrol/db/
+- `app/src/androidTest/java/com/usagecontrol/db/MigrationTest.kt`
+- `app/src/androidTest/java/com/usagecontrol/db/NotificationDaoTest.kt`
+
 ### app/src/main/
 - `app/src/main/AndroidManifest.xml`
 
@@ -99,6 +103,7 @@ Generated: 2026-11-04T05:55:39Z | Files: 182 | Described: 0/182
 
 ### app/src/main/java/com/usagecontrol/navigation/
 - `app/src/main/java/com/usagecontrol/navigation/AppNavigation.kt`
+- `app/src/main/java/com/usagecontrol/navigation/PlaceholderScreens.kt`
 
 ### app/src/main/res/drawable/
 - `app/src/main/res/drawable/ic_launcher_background.xml`
@@ -117,7 +122,9 @@ Generated: 2026-11-04T05:55:39Z | Files: 182 | Described: 0/182
 
 ### core/core-common/src/main/java/com/usagecontrol/core/common/
 - `core/core-common/src/main/java/com/usagecontrol/core/common/AppNameResolver.kt`
+- `core/core-common/src/main/java/com/usagecontrol/core/common/NotificationActions.kt`
 - `core/core-common/src/main/java/com/usagecontrol/core/common/PermissionChecker.kt`
+- `core/core-common/src/main/java/com/usagecontrol/core/common/SoundProfileApplier.kt`
 - `core/core-common/src/main/java/com/usagecontrol/core/common/TimeUtils.kt`
 
 ### core/core-common/src/main/java/com/usagecontrol/core/common/onboarding/
@@ -129,6 +136,7 @@ Generated: 2026-11-04T05:55:39Z | Files: 182 | Described: 0/182
 
 ### core/core-database/schemas/com.usagecontrol.core.database.UsageControlDatabase/
 - `core/core-database/schemas/com.usagecontrol.core.database.UsageControlDatabase/3.json`
+- `core/core-database/schemas/com.usagecontrol.core.database.UsageControlDatabase/4.json`
 
 ### core/core-database/src/main/java/com/usagecontrol/core/database/
 - `core/core-database/src/main/java/com/usagecontrol/core/database/DatabaseModule.kt`
@@ -137,6 +145,7 @@ Generated: 2026-11-04T05:55:39Z | Files: 182 | Described: 0/182
 
 ### core/core-database/src/main/java/com/usagecontrol/core/database/dao/
 - `core/core-database/src/main/java/com/usagecontrol/core/database/dao/ContextSnapshotDao.kt`
+- `core/core-database/src/main/java/com/usagecontrol/core/database/dao/LiveNotificationDao.kt`
 - `core/core-database/src/main/java/com/usagecontrol/core/database/dao/NotificationDao.kt`
 - `core/core-database/src/main/java/com/usagecontrol/core/database/dao/RuleDao.kt`
 - `core/core-database/src/main/java/com/usagecontrol/core/database/dao/SoundPresetDao.kt`
@@ -145,6 +154,7 @@ Generated: 2026-11-04T05:55:39Z | Files: 182 | Described: 0/182
 
 ### core/core-database/src/main/java/com/usagecontrol/core/database/entity/
 - `core/core-database/src/main/java/com/usagecontrol/core/database/entity/ContextSnapshotEntity.kt`
+- `core/core-database/src/main/java/com/usagecontrol/core/database/entity/LiveNotificationEntity.kt`
 - `core/core-database/src/main/java/com/usagecontrol/core/database/entity/NotificationEntity.kt`
 - `core/core-database/src/main/java/com/usagecontrol/core/database/entity/RuleEntity.kt`
 - `core/core-database/src/main/java/com/usagecontrol/core/database/entity/SoundPresetEntity.kt`
@@ -159,6 +169,7 @@ Generated: 2026-11-04T05:55:39Z | Files: 182 | Described: 0/182
 - `core/core-model/src/main/java/com/usagecontrol/core/model/ConditionGroup.kt`
 - `core/core-model/src/main/java/com/usagecontrol/core/model/ContextSnapshot.kt`
 - `core/core-model/src/main/java/com/usagecontrol/core/model/NotificationRecord.kt`
+- `core/core-model/src/main/java/com/usagecontrol/core/model/ProvisionalLane.kt`
 - `core/core-model/src/main/java/com/usagecontrol/core/model/Rule.kt`
 - `core/core-model/src/main/java/com/usagecontrol/core/model/RuleAction.kt`
 - `core/core-model/src/main/java/com/usagecontrol/core/model/RuleCondition.kt`
@@ -172,8 +183,12 @@ Generated: 2026-11-04T05:55:39Z | Files: 182 | Described: 0/182
 ### core/core-rules/src/main/java/com/usagecontrol/core/rules/
 - `core/core-rules/src/main/java/com/usagecontrol/core/rules/ActionExecutor.kt`
 - `core/core-rules/src/main/java/com/usagecontrol/core/rules/ConditionEvaluator.kt`
+- `core/core-rules/src/main/java/com/usagecontrol/core/rules/ProvisionalLaneClassifier.kt`
 - `core/core-rules/src/main/java/com/usagecontrol/core/rules/RuleEngine.kt`
 - `core/core-rules/src/main/java/com/usagecontrol/core/rules/SuggestionEngine.kt`
+
+### core/core-rules/src/test/java/com/usagecontrol/core/rules/
+- `core/core-rules/src/test/java/com/usagecontrol/core/rules/ProvisionalLaneClassifierTest.kt`
 
 ### core/core-ui/
 - `core/core-ui/build.gradle.kts`
@@ -201,6 +216,10 @@ Generated: 2026-11-04T05:55:39Z | Files: 182 | Described: 0/182
 ### core/core-ui/src/test/java/com/usagecontrol/core/ui/theme/
 - `core/core-ui/src/test/java/com/usagecontrol/core/ui/theme/LaneColorsTest.kt`
 
+### docs/
+- `docs/.nojekyll`
+- `docs/index.html`
+
 ### feature/feature-learning/
 - `feature/feature-learning/build.gradle.kts`
 
@@ -215,12 +234,41 @@ Generated: 2026-11-04T05:55:39Z | Files: 182 | Described: 0/182
 - `feature/feature-lockcontrol/src/main/java/com/usagecontrol/feature/lockcontrol/LockControlScreen.kt`
 - `feature/feature-lockcontrol/src/main/java/com/usagecontrol/feature/lockcontrol/LockControlViewModel.kt`
 
+### feature/feature-lockcontrol/src/main/java/com/usagecontrol/feature/lockcontrol/modes/
+- `feature/feature-lockcontrol/src/main/java/com/usagecontrol/feature/lockcontrol/modes/ModesLogic.kt`
+- `feature/feature-lockcontrol/src/main/java/com/usagecontrol/feature/lockcontrol/modes/ModesScreen.kt`
+- `feature/feature-lockcontrol/src/main/java/com/usagecontrol/feature/lockcontrol/modes/ModesViewModel.kt`
+
+### feature/feature-lockcontrol/src/test/java/com/usagecontrol/feature/lockcontrol/modes/
+- `feature/feature-lockcontrol/src/test/java/com/usagecontrol/feature/lockcontrol/modes/ModesLogicTest.kt`
+
 ### feature/feature-notifications/
 - `feature/feature-notifications/build.gradle.kts`
 
+### feature/feature-notifications/src/androidTest/java/com/usagecontrol/feature/notifications/
+- `feature/feature-notifications/src/androidTest/java/com/usagecontrol/feature/notifications/SwipeArchiveUndoTest.kt`
+
 ### feature/feature-notifications/src/main/java/com/usagecontrol/feature/notifications/
-- `feature/feature-notifications/src/main/java/com/usagecontrol/feature/notifications/NotificationsScreen.kt`
-- `feature/feature-notifications/src/main/java/com/usagecontrol/feature/notifications/NotificationsViewModel.kt`
+- `feature/feature-notifications/src/main/java/com/usagecontrol/feature/notifications/NotificationIcon.kt`
+- `feature/feature-notifications/src/main/java/com/usagecontrol/feature/notifications/NowScreen.kt`
+- `feature/feature-notifications/src/main/java/com/usagecontrol/feature/notifications/NowStream.kt`
+- `feature/feature-notifications/src/main/java/com/usagecontrol/feature/notifications/NowViewModel.kt`
+
+### feature/feature-notifications/src/main/java/com/usagecontrol/feature/notifications/apps/
+- `feature/feature-notifications/src/main/java/com/usagecontrol/feature/notifications/apps/AppProfileScreen.kt`
+- `feature/feature-notifications/src/main/java/com/usagecontrol/feature/notifications/apps/AppProfileViewModel.kt`
+- `feature/feature-notifications/src/main/java/com/usagecontrol/feature/notifications/apps/AppsLogic.kt`
+- `feature/feature-notifications/src/main/java/com/usagecontrol/feature/notifications/apps/AppsScreen.kt`
+- `feature/feature-notifications/src/main/java/com/usagecontrol/feature/notifications/apps/AppStats.kt`
+- `feature/feature-notifications/src/main/java/com/usagecontrol/feature/notifications/apps/AppsViewModel.kt`
+
+### feature/feature-notifications/src/test/java/com/usagecontrol/feature/notifications/
+- `feature/feature-notifications/src/test/java/com/usagecontrol/feature/notifications/NotificationIconPathTest.kt`
+- `feature/feature-notifications/src/test/java/com/usagecontrol/feature/notifications/NowStreamTest.kt`
+
+### feature/feature-notifications/src/test/java/com/usagecontrol/feature/notifications/apps/
+- `feature/feature-notifications/src/test/java/com/usagecontrol/feature/notifications/apps/AppsLogicTest.kt`
+- `feature/feature-notifications/src/test/java/com/usagecontrol/feature/notifications/apps/AppStatsTest.kt`
 
 ### feature/feature-onboarding/
 - `feature/feature-onboarding/build.gradle.kts`
@@ -292,6 +340,7 @@ Generated: 2026-11-04T05:55:39Z | Files: 182 | Described: 0/182
 - `service/service-context/src/main/java/com/usagecontrol/service/context/DeviceAdminReceiver.kt`
 - `service/service-context/src/main/java/com/usagecontrol/service/context/LockControlExecutor.kt`
 - `service/service-context/src/main/java/com/usagecontrol/service/context/SoundPresetApplier.kt`
+- `service/service-context/src/main/java/com/usagecontrol/service/context/SoundProfileApplierImpl.kt`
 - `service/service-context/src/main/java/com/usagecontrol/service/context/SoundProfileExecutor.kt`
 
 ### service/service-context/src/main/res/values/
@@ -304,7 +353,15 @@ Generated: 2026-11-04T05:55:39Z | Files: 182 | Described: 0/182
 - `service/service-notification/build.gradle.kts`
 
 ### service/service-notification/src/main/java/com/usagecontrol/service/notification/
+- `service/service-notification/src/main/java/com/usagecontrol/service/notification/CaptureMapping.kt`
+- `service/service-notification/src/main/java/com/usagecontrol/service/notification/IconStore.kt`
+- `service/service-notification/src/main/java/com/usagecontrol/service/notification/NotificationActionsImpl.kt`
 - `service/service-notification/src/main/java/com/usagecontrol/service/notification/NotificationCaptureService.kt`
+- `service/service-notification/src/main/java/com/usagecontrol/service/notification/PendingIntentCache.kt`
+
+### service/service-notification/src/test/java/com/usagecontrol/service/notification/
+- `service/service-notification/src/test/java/com/usagecontrol/service/notification/CaptureMappingTest.kt`
+- `service/service-notification/src/test/java/com/usagecontrol/service/notification/IconStorePathTest.kt`
 
 ### service/service-usage/
 - `service/service-usage/build.gradle.kts`

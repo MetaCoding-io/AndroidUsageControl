@@ -1,0 +1,177 @@
+{
+  "runId": "uat:M007:S02:attempt-1",
+  "attempt": 1,
+  "milestoneId": "M007",
+  "sliceId": "S02",
+  "uatType": "runtime-executable",
+  "verdict": "PARTIAL",
+  "gateVerdict": "flag",
+  "evaluatedAt": "2026-11-04T06:23:19.495Z",
+  "worktreeRoot": "/home/james/Code/AndroidUsageControl",
+  "sourceRevision": "sha256:6d54c1401cc04de4876695a54776e842a0d5104967d3d238d237df2656a8de37",
+  "browserToolsPresented": false,
+  "modePolicy": {
+    "browserTools": false,
+    "partialEligible": false,
+    "passWithHumanFollowUp": false,
+    "requiredAnyModes": [
+      "runtime"
+    ]
+  },
+  "checks": [
+    {
+      "id": "precondition-device",
+      "description": "Debug APK installed on device/emulator with listener access granted",
+      "mode": "runtime",
+      "result": "FAIL",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "0c44b81d-42da-4a9f-b2bb-1e4111968626"
+        },
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "2ac26033-ee67-4aeb-87ca-26a123c5cc93"
+        }
+      ],
+      "notes": "adb not on PATH; ~/Android/Sdk/platform-tools/adb devices lists no devices. Precondition unmet."
+    },
+    {
+      "id": "step1-upsert",
+      "description": "Post same tag twice -> one key, updateCount=1 in NotificationCapture log",
+      "mode": "human-follow-up",
+      "result": "NEEDS-HUMAN",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "2ac26033-ee67-4aeb-87ca-26a123c5cc93"
+        }
+      ],
+      "notes": "Blocked: no device attached. Run adb cmd notification post twice and check logcat."
+    },
+    {
+      "id": "step2-cancel",
+      "description": "Cancel tag1 -> APP_CANCEL reason, one history row updateCount=1 with removalReason",
+      "mode": "human-follow-up",
+      "result": "NEEDS-HUMAN",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "2ac26033-ee67-4aeb-87ca-26a123c5cc93"
+        }
+      ],
+      "notes": "Blocked: no device attached."
+    },
+    {
+      "id": "step3-ongoing",
+      "description": "Media/FGS notification appears in live_notifications, not history",
+      "mode": "human-follow-up",
+      "result": "NEEDS-HUMAN",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "2ac26033-ee67-4aeb-87ca-26a123c5cc93"
+        }
+      ],
+      "notes": "Blocked: no device attached."
+    },
+    {
+      "id": "step4-restart-reconcile",
+      "description": "Force-stop, re-enable listener, reopen -> icons from filesDir/icons, reconcile log matches active",
+      "mode": "human-follow-up",
+      "result": "NEEDS-HUMAN",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "2ac26033-ee67-4aeb-87ca-26a123c5cc93"
+        }
+      ],
+      "notes": "Blocked: no device attached."
+    },
+    {
+      "id": "step5-connected-tests",
+      "description": "./gradlew connectedDebugAndroidTest (com.usagecontrol.db) migration + DAO tests pass",
+      "mode": "runtime",
+      "result": "NEEDS-HUMAN",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "ed9b7b4e-b204-4638-8661-4132ced12649"
+        }
+      ],
+      "notes": "Instrumented tests require a device; not runnable. Substitute: testDebugUnitTest exit=0."
+    },
+    {
+      "id": "edge-cases",
+      "description": "Legacy v3 rows keep NULL key and stay in stats; ongoing rows excluded from dismiss stats",
+      "mode": "human-follow-up",
+      "result": "NEEDS-HUMAN",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "ed9b7b4e-b204-4638-8661-4132ced12649"
+        }
+      ],
+      "notes": "Covered only by instrumented migration/DAO tests that need a device."
+    }
+  ],
+  "presentation": {
+    "surface": "mcp",
+    "presentedTools": [
+      "gsd_uat_exec",
+      "gsd_uat_result_save",
+      "gsd_resume",
+      "gsd_milestone_status",
+      "gsd_journal_query",
+      "find",
+      "glob",
+      "grep",
+      "ls",
+      "read"
+    ],
+    "blockedTools": [
+      {
+        "name": "edit",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "write",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "gsd_exec",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "gsd_summary_save",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "gsd_save_gate_result",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "search-the-web",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "WebSearch",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "Bash",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "Write",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "Edit",
+        "reason": "forbidden during run-uat"
+      }
+    ],
+    "toolPresentationPlanId": "run-uat/default-v1"
+  },
+  "notes": "No adb device/emulator attached (adb devices empty), so every device-dependent runtime step could not be executed; JVM unit tests pass as partial substitute."
+}

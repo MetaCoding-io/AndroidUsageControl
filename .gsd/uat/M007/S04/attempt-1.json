@@ -1,0 +1,157 @@
+{
+  "runId": "uat:M007:S04:attempt-1",
+  "attempt": 1,
+  "milestoneId": "M007",
+  "sliceId": "S04",
+  "uatType": "runtime-executable",
+  "verdict": "PARTIAL",
+  "gateVerdict": "flag",
+  "evaluatedAt": "2026-11-04T06:58:07.187Z",
+  "worktreeRoot": "/home/james/Code/AndroidUsageControl",
+  "sourceRevision": "sha256:4097addaebd79c973add4fe41e3385cd7eac53da5fbbbcc789fb2a3fb4eea814",
+  "browserToolsPresented": false,
+  "modePolicy": {
+    "browserTools": false,
+    "partialEligible": false,
+    "passWithHumanFollowUp": false,
+    "requiredAnyModes": [
+      "runtime"
+    ]
+  },
+  "checks": [
+    {
+      "id": "device-precondition",
+      "description": "Precondition: debug APK installed on a device with access granted",
+      "mode": "runtime",
+      "result": "NEEDS-HUMAN",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "db8bbeea-ba49-46f4-adbf-3e6bd33f272c"
+        }
+      ],
+      "notes": "app-debug.apk is built, but adb is not on PATH and no device is attached."
+    },
+    {
+      "id": "static-wiring",
+      "description": "The apps_list, app_profile, modes_list, Unknown channel and SoundProfileApplier wiring is present, and the placeholders are removed",
+      "mode": "artifact",
+      "result": "PASS",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "e9f7687a-2199-4918-8f9e-67716e7b8f47"
+        }
+      ],
+      "notes": "All identifiers were found and PlaceholderScreens.kt is removed."
+    },
+    {
+      "id": "step1-apps-list",
+      "description": "Apps tab rows are sorted by alerts/day and show an icon, label, sparkline and dismiss hint",
+      "mode": "human-follow-up",
+      "result": "NEEDS-HUMAN",
+      "notes": "No device is available. Verify on a device."
+    },
+    {
+      "id": "step2-app-profile",
+      "description": "The app profile shows the ring, median, hourly bars, channels, screen time, limit and suggestions",
+      "mode": "human-follow-up",
+      "result": "NEEDS-HUMAN",
+      "notes": "No device is available."
+    },
+    {
+      "id": "step3-limit-persist",
+      "description": "The daily limit persists with no duplicate rule",
+      "mode": "human-follow-up",
+      "result": "NEEDS-HUMAN",
+      "notes": "No device is available."
+    },
+    {
+      "id": "step4-modes-list",
+      "description": "Modes tab shows Focus, Sleep and Normal cards, the context strip and the screen-time summary",
+      "mode": "human-follow-up",
+      "result": "NEEDS-HUMAN",
+      "notes": "No device is available."
+    },
+    {
+      "id": "step5-ringer-apply",
+      "description": "Toggling a mode changes the ringer, and SoundProfileApplier logcat shows applied",
+      "mode": "human-follow-up",
+      "result": "NEEDS-HUMAN",
+      "notes": "Requires adb and a device."
+    },
+    {
+      "id": "edge-permission-denied",
+      "description": "With notification-policy access revoked, a snackbar appears and logcat shows permission-denied",
+      "mode": "human-follow-up",
+      "result": "NEEDS-HUMAN",
+      "notes": "Requires a device."
+    },
+    {
+      "id": "edge-no-actions-median",
+      "description": "An app with no actions shows an em dash for the median, not a crash",
+      "mode": "human-follow-up",
+      "result": "NEEDS-HUMAN",
+      "notes": "Requires a device."
+    }
+  ],
+  "presentation": {
+    "surface": "mcp",
+    "presentedTools": [
+      "gsd_uat_exec",
+      "gsd_uat_result_save",
+      "gsd_resume",
+      "gsd_milestone_status",
+      "gsd_journal_query",
+      "find",
+      "glob",
+      "grep",
+      "ls",
+      "read"
+    ],
+    "blockedTools": [
+      {
+        "name": "edit",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "write",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "gsd_exec",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "gsd_summary_save",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "gsd_save_gate_result",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "search-the-web",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "WebSearch",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "Bash",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "Write",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "Edit",
+        "reason": "forbidden during run-uat"
+      }
+    ],
+    "toolPresentationPlanId": "run-uat/default-v1"
+  },
+  "notes": "The on-device runtime checks could not run because adb is not installed and no device is attached; the static wiring checks passed."
+}

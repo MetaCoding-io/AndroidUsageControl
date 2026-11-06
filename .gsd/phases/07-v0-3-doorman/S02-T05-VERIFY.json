@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "taskId": "T05",
+  "unitId": "M007/S02/T05",
+  "timestamp": 1793773329464,
+  "passed": true,
+  "discoverySource": "task-plan",
+  "checks": [
+    {
+      "command": "./gradlew :app:assembleDebug :core:core-rules:testDebugUnitTest",
+      "exitCode": 0,
+      "durationMs": 2849,
+      "verdict": "pass"
+    }
+  ]
+}

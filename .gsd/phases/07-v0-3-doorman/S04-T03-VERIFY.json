@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "taskId": "T03",
+  "unitId": "M007/S04/T03",
+  "timestamp": 1793775410002,
+  "passed": true,
+  "discoverySource": "task-plan",
+  "checks": [
+    {
+      "command": "./gradlew assembleDebug check :app:assembleDebugAndroidTest && grep -rq \"modes_list\" feature/feature-lockcontrol/src/main && grep -rq \"mode_toggle_\" feature/feature-lockcontrol/src/main && test ! -e app/src/main/java/com/usagecontrol/navigation/PlaceholderScreens.kt",
+      "exitCode": 0,
+      "durationMs": 3406,
+      "verdict": "pass"
+    }
+  ]
+}
