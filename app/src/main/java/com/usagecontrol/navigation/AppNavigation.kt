@@ -26,7 +26,11 @@ object AppRoutes {
     const val INSIGHTS = "insights"
     const val TOUR = "tour/standalone"
     const val APP_PROFILE = "apps/{packageName}"
+    const val LANE_EDITOR = "lanes/{laneId}"
 
     /** Package names are [A-Za-z0-9_.], but encode anyway so a bad value can't break the route. */
     fun appProfile(packageName: String): String = "apps/${Uri.encode(packageName)}"
+
+    /** Lane id 0 opens the editor for a new lane. */
+    fun laneEditor(laneId: Long): String = "lanes/$laneId"
 }

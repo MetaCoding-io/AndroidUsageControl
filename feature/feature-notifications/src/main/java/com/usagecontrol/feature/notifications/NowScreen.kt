@@ -186,21 +186,21 @@ private fun NowContent(state: NowUiState, onQueryChange: (String) -> Unit, rowAc
                     meta = section.items.sumOf { if (it is BundleItem) it.count else 1 }.toString(),
                 )
             }
+            // One app can bundle in several sections, so list keys are scoped by section.
+            val scope = section.section.name
             section.items.forEach { item ->
                 when (item) {
-                    is SingleItem -> item(key = item.id) {
+                    is SingleItem -> item(key = "$scope:${item.id}") {
                         SwipeableNotificationItem(item.record, rowActions, Modifier.padding(horizontal = 12.dp))
                     }
                     is BundleItem -> bundleItems(
                         bundle = item,
+                        keyScope = scope,
                         rowActions = rowActions,
-                        expanded = item.id in expandedBundles,
+                        expanded = "$scope:${item.id}" in expandedBundles,
                         onToggle = {
-                            expandedBundles = if (item.id in expandedBundles) {
-                                expandedBundles - item.id
-                            } else {
-                                expandedBundles + item.id
-                            }
+                            val id = "$scope:${item.id}"
+                            expandedBundles = if (id in expandedBundles) expandedBundles - id else expandedBundles + id
                         },
                     )
                 }
@@ -231,11 +231,12 @@ private fun NowContent(state: NowUiState, onQueryChange: (String) -> Unit, rowAc
 
 private fun LazyListScope.bundleItems(
     bundle: BundleItem,
+    keyScope: String,
     rowActions: RowActions,
     expanded: Boolean,
     onToggle: () -> Unit,
 ) {
-    item(key = bundle.id) {
+    item(key = "$keyScope:${bundle.id}") {
         val newest = bundle.rows.first()
         BundleRow(
             lane = bundle.lane,
@@ -248,7 +249,7 @@ private fun LazyListScope.bundleItems(
         )
     }
     if (expanded) {
-        items(bundle.rows, key = { "${bundle.id}:${it.id}" }) { record ->
+        items(bundle.rows, key = { "$keyScope:${bundle.id}:${it.id}" }) { record ->
             SwipeableNotificationItem(record, rowActions, Modifier.padding(start = 28.dp, end = 12.dp))
         }
     }

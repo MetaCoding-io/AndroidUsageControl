@@ -6,22 +6,26 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.usagecontrol.core.common.TimeUtils
+import com.usagecontrol.core.database.LaneRepository
 import com.usagecontrol.core.database.dao.NotificationDao
 import com.usagecontrol.core.database.dao.RuleDao
-import com.usagecontrol.core.database.dao.SuggestionDao
 import com.usagecontrol.core.database.dao.UsageDao
 import com.usagecontrol.core.database.toEntity
 import com.usagecontrol.core.database.toModel
+import com.usagecontrol.core.model.Lane
+import com.usagecontrol.core.model.Route
+import com.usagecontrol.core.model.RouteKind
 import com.usagecontrol.core.model.Rule
-import com.usagecontrol.core.model.RuleCreator
 import com.usagecontrol.core.model.RulePillar
-import com.usagecontrol.core.model.Suggestion
-import com.usagecontrol.core.model.SuggestionStatus
+import com.usagecontrol.core.rules.ReScreenPrompt
+import com.usagecontrol.core.rules.ReScreenPromptEngine
+import com.usagecontrol.feature.notifications.lanes.LaneLogic
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
@@ -49,7 +53,17 @@ data class AppProfileUiState(
     val channels: List<Pair<String, Int>> = emptyList(),
     val todayScreenTimeMs: Long = 0,
     val limitMinutes: Int? = null,
-    val suggestions: List<Suggestion> = emptyList(),
+    val lanes: List<Lane> = emptyList(),
+    /** Lane of this app's APP route; null while unscreened (filed by category). */
+    val appLaneId: Long? = null,
+    /** PERSON/CHANNEL routes inside this app, which override [appLaneId] for their sender. */
+    val senderRoutes: List<Route> = emptyList(),
+    /** This app's history per lane over the lane window, busiest first. */
+    val laneHistory: List<Pair<Lane, Int>> = emptyList(),
+    /** Habit-based re-screening prompt (R004), if the app qualifies. */
+    val prompt: ReScreenPrompt? = null,
+    /** True while a lane change is being written. */
+    val routing: Boolean = false,
     val error: Boolean = false,
 ) {
     /** Everything the user did not throw away: opened, snoozed, or left for later. */
@@ -63,7 +77,7 @@ class AppProfileViewModel @Inject constructor(
     private val notificationDao: NotificationDao,
     private val usageDao: UsageDao,
     private val ruleDao: RuleDao,
-    private val suggestionDao: SuggestionDao,
+    private val laneRepository: LaneRepository,
 ) : ViewModel() {
 
     val packageName: String = savedStateHandle.get<String>("packageName").orEmpty()
@@ -89,8 +103,28 @@ class AppProfileViewModel @Inject constructor(
     private val limitRule: Flow<Rule?> = ruleDao.getByPillarFlow(RulePillar.SCREEN_TIME.name)
         .map { list -> AppsLogic.findLimitRule(list.map { it.toModel() }, packageName) }
 
-    private val suggestions = suggestionDao.getPendingFlow()
-        .map { list -> list.filter { it.appPackageName == packageName }.map { it.toModel() } }
+    private val laneSince = System.currentTimeMillis() - LaneLogic.WINDOW_DAYS * 24 * 60 * 60 * 1000L
+    private val promptDismissed = MutableStateFlow(false)
+    private val routing = MutableStateFlow(false)
+
+    private val laneState = combine(
+        laneRepository.lanes,
+        laneRepository.routesFor(packageName),
+        notificationDao.appLaneCountsFlow(laneSince),
+        notificationDao.appQuickDismissStatsFlow(laneSince, ReScreenPromptEngine.QUICK_DISMISS_MS)
+            .map { rows -> rows.filter { it.packageName == packageName } },
+        combine(promptDismissed, routing, ::Pair),
+    ) { lanes, routes, laneCounts, quick, (dismissed, busy) ->
+        val laneCountsHere = laneCounts.filter { it.packageName == packageName }
+        LaneSection(
+            lanes = lanes,
+            appLaneId = LaneLogic.appRouteLanes(routes)[packageName],
+            senderRoutes = routes.filter { it.kind != RouteKind.APP },
+            laneHistory = LaneLogic.laneBreakdown(packageName, laneCountsHere, lanes),
+            prompt = if (dismissed) null else LaneLogic.prompts(quick, routes, laneCountsHere, lanes).firstOrNull(),
+            routing = busy,
+        )
+    }
 
     private val todayUsage = usageDao.getByDateFlow(TimeUtils.todayDate())
         .map { list -> list.filter { it.packageName == packageName }.sumOf { it.foregroundTimeMs } }
@@ -109,11 +143,16 @@ class AppProfileViewModel @Inject constructor(
     }
 
     val uiState: StateFlow<AppProfileUiState> =
-        combine(stats, limitRule, suggestions, todayUsage) { s, rule, sug, usage ->
+        combine(stats, limitRule, laneState, todayUsage) { s, rule, lane, usage ->
             s.copy(
                 limitMinutes = rule?.let(AppsLogic::limitMinutes),
-                suggestions = sug,
                 todayScreenTimeMs = usage,
+                lanes = lane.lanes,
+                appLaneId = lane.appLaneId,
+                senderRoutes = lane.senderRoutes,
+                laneHistory = lane.laneHistory,
+                prompt = lane.prompt,
+                routing = lane.routing,
             )
         }.flowOn(Dispatchers.IO)
             .catch { e ->
@@ -121,7 +160,7 @@ class AppProfileViewModel @Inject constructor(
                 emit(AppProfileUiState(loading = false, packageName = packageName, label = packageName, error = true))
             }
             .onEach { s ->
-                Log.d(TAG, "state pkg=$packageName total=${s.total} limit=${s.limitMinutes} sug=${s.suggestions.size}")
+                Log.d(TAG, "state pkg=$packageName total=${s.total} limit=${s.limitMinutes} lane=${s.appLaneId} prompt=${s.prompt != null}")
             }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AppProfileUiState(packageName = packageName))
 
@@ -174,30 +213,49 @@ class AppProfileViewModel @Inject constructor(
         }
     }
 
-    /** Same as LearningViewModel.acceptSuggestion: insert the template as a LEARNED rule. */
-    fun acceptSuggestion(suggestion: Suggestion) {
+    /** Routes the whole app to [laneId] (APP route) and re-files its history there. */
+    fun setAppLane(laneId: Long) {
+        if (routing.value) return
+        val lane = uiState.value.lanes.firstOrNull { it.id == laneId }
+        if (lane == null) {
+            Log.w(LANES_TAG, "profile pkg=$packageName: lane $laneId missing")
+            return
+        }
+        routing.value = true
         viewModelScope.launch {
             try {
-                val ruleId = ruleDao.insert(suggestion.ruleTemplate.copy(createdBy = RuleCreator.LEARNED).toEntity())
-                suggestionDao.markAccepted(suggestion.id, ruleId)
-                Log.i(TAG, "suggestion ${suggestion.id} accepted as rule $ruleId")
-                _messages.send("Rule added")
+                val reFiled = laneRepository.setRoute(RouteKind.APP, packageName, "", laneId)
+                Log.i(LANES_TAG, "profile routed pkg=$packageName lane=$laneId reFiled=$reFiled")
+                _messages.send("Moved to ${lane.name} · re-filed $reFiled")
             } catch (e: Exception) {
-                Log.e(TAG, "suggestion ${suggestion.id}: accept failed", e)
-                _messages.send("Couldn't add the rule")
+                Log.e(LANES_TAG, "profile route failed pkg=$packageName lane=$laneId", e)
+                _messages.send("Couldn't change the lane")
+            } finally {
+                routing.value = false
             }
         }
     }
 
-    fun dismissSuggestion(suggestion: Suggestion) {
-        viewModelScope.launch {
-            suggestionDao.updateStatus(suggestion.id, SuggestionStatus.DISMISSED.name)
-            Log.i(TAG, "suggestion ${suggestion.id} dismissed")
-        }
+    /** Accepting a re-screening prompt routes the app to the suggested lane. */
+    fun acceptPrompt(prompt: ReScreenPrompt) = setAppLane(prompt.targetLaneId)
+
+    fun dismissPrompt() {
+        promptDismissed.value = true
+        Log.i(LANES_TAG, "profile pkg=$packageName prompt dismissed")
     }
 
     companion object {
         const val WINDOW_DAYS = 30
         private const val TAG = "AppProfileViewModel"
+        private const val LANES_TAG = "Lanes"
     }
 }
+
+private data class LaneSection(
+    val lanes: List<Lane>,
+    val appLaneId: Long?,
+    val senderRoutes: List<Route>,
+    val laneHistory: List<Pair<Lane, Int>>,
+    val prompt: ReScreenPrompt?,
+    val routing: Boolean,
+)

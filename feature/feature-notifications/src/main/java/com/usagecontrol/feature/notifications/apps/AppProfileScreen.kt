@@ -3,6 +3,7 @@ package com.usagecontrol.feature.notifications.apps
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,7 +17,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -36,24 +36,31 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.usagecontrol.core.common.TimeUtils
-import com.usagecontrol.core.model.Suggestion
+import com.usagecontrol.core.model.Lane
+import com.usagecontrol.core.model.RouteKind
 import com.usagecontrol.core.ui.component.DonutChart
 import com.usagecontrol.core.ui.component.LoadingScreen
 import com.usagecontrol.core.ui.component.SectionHeader
 import com.usagecontrol.core.ui.component.SimpleBarChart
 import com.usagecontrol.feature.notifications.AppIcon
+import com.usagecontrol.feature.notifications.lanes.LaneChoiceChip
+import com.usagecontrol.feature.notifications.lanes.LaneLogic
+import com.usagecontrol.feature.notifications.lanes.LaneSwatch
+import com.usagecontrol.feature.notifications.screener.ReScreenPromptCard
 
-/** Per-app profile: interruption stats, channels, screen-time limit and pending suggestions. */
+/** Per-app profile: lane routing, interruption stats, channels, screen-time limit and re-screening prompts. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppProfileScreen(
     onNavigateBack: () -> Unit,
+    onEditLane: (laneId: Long) -> Unit = {},
     viewModel: AppProfileViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -81,8 +88,10 @@ fun AppProfileScreen(
                     state = state,
                     onEditLimit = { showLimitDialog = true },
                     onClearLimit = viewModel::clearLimit,
-                    onAccept = viewModel::acceptSuggestion,
-                    onDismiss = viewModel::dismissSuggestion,
+                    onSelectLane = viewModel::setAppLane,
+                    onEditLane = onEditLane,
+                    onAcceptPrompt = { state.prompt?.let(viewModel::acceptPrompt) },
+                    onDismissPrompt = viewModel::dismissPrompt,
                 )
             }
         }
@@ -109,14 +118,31 @@ private fun ProfileContent(
     state: AppProfileUiState,
     onEditLimit: () -> Unit,
     onClearLimit: () -> Unit,
-    onAccept: (Suggestion) -> Unit,
-    onDismiss: (Suggestion) -> Unit,
+    onSelectLane: (Long) -> Unit,
+    onEditLane: (Long) -> Unit,
+    onAcceptPrompt: () -> Unit,
+    onDismissPrompt: () -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize().testTag("app_profile"),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         item(key = "ring") { RingSection(state) }
+
+        state.prompt?.let { prompt ->
+            item(key = "rescreen") {
+                ReScreenPromptCard(
+                    prompt = prompt,
+                    enabled = !state.routing,
+                    onAccept = onAcceptPrompt,
+                    onDismiss = onDismissPrompt,
+                )
+            }
+        }
+
+        item(key = "lane") {
+            LaneSection(state = state, onSelectLane = onSelectLane, onEditLane = onEditLane)
+        }
 
         item(key = "hourly") {
             SectionHeader(title = "When it notifies", meta = "by hour")
@@ -173,16 +199,6 @@ private fun ProfileContent(
             }
         }
 
-        item(key = "suggestions-header") {
-            SectionHeader(title = "Suggestions", meta = state.suggestions.size.toString())
-        }
-        if (state.suggestions.isEmpty()) {
-            item(key = "suggestions-empty") { MutedLine("Nothing to suggest for this app yet") }
-        }
-        items(state.suggestions, key = { "suggestion:${it.id}" }) { suggestion ->
-            SuggestionCard(suggestion, onAccept = { onAccept(suggestion) }, onDismiss = { onDismiss(suggestion) })
-        }
-
         if (state.error) {
             item(key = "error") { MutedLine("Couldn't load stats for this app") }
         }
@@ -227,15 +243,69 @@ private fun RingSection(state: AppProfileUiState) {
 }
 
 @Composable
-private fun SuggestionCard(suggestion: Suggestion, onAccept: () -> Unit, onDismiss: () -> Unit) {
-    Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).testTag("app_profile_suggestion")) {
-        Column(modifier = Modifier.padding(12.dp)) {
-            Text(suggestion.reason, style = MaterialTheme.typography.bodyMedium)
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                TextButton(onClick = onDismiss) { Text("Not now") }
-                TextButton(onClick = onAccept, modifier = Modifier.testTag("app_profile_accept")) { Text("Accept") }
+private fun LaneSection(
+    state: AppProfileUiState,
+    onSelectLane: (Long) -> Unit,
+    onEditLane: (Long) -> Unit,
+) {
+    val current = state.lanes.firstOrNull { it.id == state.appLaneId }
+    SectionHeader(title = "Lane", meta = current?.name ?: "Unscreened")
+    Column(
+        modifier = Modifier.padding(horizontal = 16.dp).testTag("lane_picker"),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        if (current == null) {
+            Text(
+                "Not routed yet: alerts are filed by category. Pick a lane to route the whole app.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            state.lanes.forEach { lane ->
+                LaneChoiceChip(
+                    lane = lane,
+                    selected = lane.id == state.appLaneId,
+                    enabled = !state.routing,
+                    onClick = { if (lane.id != state.appLaneId) onSelectLane(lane.id) },
+                )
             }
         }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            if (current != null) {
+                TextButton(onClick = { onEditLane(current.id) }, modifier = Modifier.testTag("lane_picker_edit")) {
+                    Text("Edit ${current.name}")
+                }
+            }
+            TextButton(onClick = { onEditLane(0L) }, modifier = Modifier.testTag("lane_picker_new")) {
+                Text("New lane")
+            }
+        }
+        state.senderRoutes.forEach { route ->
+            val lane = state.lanes.firstOrNull { it.id == route.laneId }
+            Text(
+                "${if (route.kind == RouteKind.PERSON) route.key else "Channel ${route.key}"} → ${lane?.name ?: "missing lane"}",
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.testTag("lane_picker_sender_route"),
+            )
+        }
+        if (state.laneHistory.isNotEmpty()) {
+            Text("History by lane (${LaneLogic.WINDOW_DAYS}d)", style = MaterialTheme.typography.labelMedium)
+            state.laneHistory.forEach { (lane, count) -> LaneHistoryRow(lane, count) }
+        }
+    }
+}
+
+@Composable
+private fun LaneHistoryRow(lane: Lane, count: Int) {
+    Row(
+        modifier = Modifier.fillMaxWidth().testTag("lane_history_${lane.id}"),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        LaneSwatch(Color(lane.colorArgb))
+        Spacer(Modifier.width(8.dp))
+        Text(lane.name, style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
+        Text(count.toString(), style = MaterialTheme.typography.labelMedium)
     }
 }
 

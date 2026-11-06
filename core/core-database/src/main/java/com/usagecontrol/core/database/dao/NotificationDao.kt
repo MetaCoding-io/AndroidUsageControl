@@ -246,6 +246,56 @@ interface NotificationDao {
     """)
     fun appChannelCountsFlow(packageName: String, since: Long): Flow<List<ChannelCountRow>>
 
+    // -- Lanes / Screener (R014, R004) --
+
+    /**
+     * Per-app totals and dismissals within [quickMs] of posting since [since], for
+     * re-screening prompts. Uses the same "dismissed" definition as [appAlertCountsFlow].
+     */
+    @Query("""
+        SELECT packageName, MAX(appName) AS appName,
+            COUNT(*) AS total,
+            SUM(CASE WHEN (removalReason IN ('CANCEL', 'CANCEL_ALL') OR userAction = 'ARCHIVED'
+                    OR (userAction = 'DISMISSED' AND removalReason IS NULL))
+                AND COALESCE(removedAt, actionTimestamp) - timestamp >= 0
+                AND COALESCE(removedAt, actionTimestamp) - timestamp < :quickMs
+                THEN 1 ELSE 0 END) AS quickDismissed
+        FROM notifications
+        WHERE timestamp >= :since AND isOngoing = 0 AND isGroupSummary = 0
+        GROUP BY packageName
+    """)
+    fun appQuickDismissStatsFlow(since: Long, quickMs: Long): Flow<List<AppQuickDismissRow>>
+
+    /** Notification counts per (app, lane) since [since]; laneId is NULL for rows filed before v5. */
+    @Query("""
+        SELECT packageName, laneId, COUNT(*) AS count
+        FROM notifications
+        WHERE timestamp >= :since AND isOngoing = 0 AND isGroupSummary = 0
+        GROUP BY packageName, laneId
+    """)
+    fun appLaneCountsFlow(since: Long): Flow<List<AppLaneCountRow>>
+
+    /**
+     * Recent rows no route claims (APP route for the package, CHANNEL on channelId, or
+     * PERSON on COALESCE(NULLIF(shortcutId,''), title)), newest first: the Screener's
+     * unscreened senders before grouping. Excludes [ownPackage] (Doorman itself).
+     */
+    @Query("""
+        SELECT id, packageName, appName, title, text, timestamp, isConversation, shortcutId, channelId, laneId
+        FROM notifications
+        WHERE timestamp >= :since AND isOngoing = 0 AND isGroupSummary = 0 AND packageName != :ownPackage
+        AND NOT EXISTS (
+            SELECT 1 FROM routes r WHERE r.packageName = notifications.packageName AND (
+                r.kind = 'APP' OR
+                (r.kind = 'CHANNEL' AND r.`key` = notifications.channelId) OR
+                (r.kind = 'PERSON' AND r.`key` = COALESCE(NULLIF(notifications.shortcutId, ''), notifications.title))
+            )
+        )
+        ORDER BY timestamp DESC
+        LIMIT :limit
+    """)
+    fun unroutedFlow(since: Long, ownPackage: String, limit: Int = 500): Flow<List<UnroutedRow>>
+
     // Hour-of-day distribution of dismissed notifications per app
     @Query("""
         SELECT packageName, appName,
@@ -311,6 +361,32 @@ data class AppAlertCountRow(
     val appName: String,
     val total: Int,
     val dismissed: Int,
+)
+
+data class AppQuickDismissRow(
+    val packageName: String,
+    val appName: String,
+    val total: Int,
+    val quickDismissed: Int,
+)
+
+data class AppLaneCountRow(
+    val packageName: String,
+    val laneId: Long?,
+    val count: Int,
+)
+
+data class UnroutedRow(
+    val id: Long,
+    val packageName: String,
+    val appName: String,
+    val title: String?,
+    val text: String?,
+    val timestamp: Long,
+    val isConversation: Boolean,
+    val shortcutId: String?,
+    val channelId: String?,
+    val laneId: Long?,
 )
 
 data class AppDayCountRow(

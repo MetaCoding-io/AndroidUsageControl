@@ -2,6 +2,7 @@ package com.usagecontrol
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -25,6 +26,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.usagecontrol.core.common.ScreenerLink
 import com.usagecontrol.core.ui.theme.DoormanTheme
 import com.usagecontrol.feature.learning.LearningScreen
 import com.usagecontrol.feature.lockcontrol.LockControlScreen
@@ -32,6 +34,8 @@ import com.usagecontrol.feature.lockcontrol.modes.ModesScreen
 import com.usagecontrol.feature.notifications.NowScreen
 import com.usagecontrol.feature.notifications.apps.AppProfileScreen
 import com.usagecontrol.feature.notifications.apps.AppsScreen
+import com.usagecontrol.feature.notifications.lanes.LaneEditorScreen
+import com.usagecontrol.feature.notifications.screener.ScreenerSheet
 import com.usagecontrol.feature.onboarding.FeatureTourScreen
 import com.usagecontrol.feature.onboarding.PermissionWalkthroughScreen
 import com.usagecontrol.feature.onboarding.QuickSetupScreen
@@ -48,15 +52,38 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    /** Open Screener request from a `doorman://screener` link; null when the sheet is closed. */
+    private var screenerRequest by mutableStateOf<ScreenerRequest?>(null)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         startMonitoringServices()
+        // Only a fresh launch reads the link; a recreate must not reopen a sheet the user closed.
+        if (savedInstanceState == null) handleScreenerLink(intent)
         setContent {
             DoormanTheme {
-                UsageControlAppContent()
+                UsageControlAppContent(
+                    screenerRequest = screenerRequest,
+                    onScreenerDismissed = { screenerRequest = null },
+                )
             }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleScreenerLink(intent)
+    }
+
+    private fun handleScreenerLink(intent: Intent?) {
+        val uri = intent?.data
+        if (intent?.action != Intent.ACTION_VIEW || !ScreenerLink.matches(uri)) return
+        val pkg = uri?.getQueryParameter(ScreenerLink.PARAM_PACKAGE)?.takeIf { it.isNotBlank() }
+        Log.i("Lanes", "screener link opened pkg=$pkg")
+        screenerRequest = ScreenerRequest(pkg, System.nanoTime())
     }
 
     private fun startMonitoringServices() {
@@ -69,9 +96,14 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+/** A Screener sheet open request; [nonce] makes a repeat tap for the same app a new request. */
+data class ScreenerRequest(val packageName: String?, val nonce: Long)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UsageControlAppContent(
+    screenerRequest: ScreenerRequest? = null,
+    onScreenerDismissed: () -> Unit = {},
     viewModel: MainViewModel = hiltViewModel(),
 ) {
     val startDestination by viewModel.startDestination.collectAsStateWithLifecycle()
@@ -215,7 +247,17 @@ fun UsageControlAppContent(
                     route = AppRoutes.APP_PROFILE,
                     arguments = listOf(navArgument("packageName") { type = NavType.StringType }),
                 ) {
-                    AppProfileScreen(onNavigateBack = { navController.popBackStack() })
+                    AppProfileScreen(
+                        onNavigateBack = { navController.popBackStack() },
+                        onEditLane = { laneId -> navController.navigate(AppRoutes.laneEditor(laneId)) },
+                    )
+                }
+
+                composable(
+                    route = AppRoutes.LANE_EDITOR,
+                    arguments = listOf(navArgument("laneId") { type = NavType.LongType; defaultValue = 0L }),
+                ) {
+                    LaneEditorScreen(onNavigateBack = { navController.popBackStack() })
                 }
 
                 composable(AppRoutes.TOUR) {
@@ -255,6 +297,13 @@ fun UsageControlAppContent(
                     )
                 }
             }
+        }
+    }
+
+    // The Screener floats over whatever screen is showing (R014).
+    screenerRequest?.let { request ->
+        key(request.nonce) {
+            ScreenerSheet(focusPackage = request.packageName, onDismiss = onScreenerDismissed)
         }
     }
 }
