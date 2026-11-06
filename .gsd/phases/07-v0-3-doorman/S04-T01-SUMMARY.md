@@ -48,4 +48,4 @@ The DAO instrumented tests are compiled but have not run on a device. appDailyCo
 - `feature/feature-notifications/src/main/java/com/usagecontrol/feature/notifications/apps/AppStats.kt`
 - `feature/feature-notifications/src/test/java/com/usagecontrol/feature/notifications/apps/AppStatsTest.kt`
 - `app/src/androidTest/java/com/usagecontrol/db/NotificationDaoTest.kt`
-<!-- gsd:state-version=156:1 -->
+<!-- gsd:state-version=161:1 -->

@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "taskId": "T03",
+  "unitId": "M007/S05/T03",
+  "timestamp": 1793929280936,
+  "passed": true,
+  "discoverySource": "task-plan",
+  "checks": [
+    {
+      "command": "test -f app/src/main/res/values-night/themes.xml && ./gradlew assembleDebug check :app:assembleDebugAndroidTest",
+      "exitCode": 0,
+      "durationMs": 4994,
+      "verdict": "pass"
+    }
+  ]
+}

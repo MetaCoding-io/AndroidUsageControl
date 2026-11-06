@@ -1,7 +1,7 @@
 # Codebase Map
 
-Generated: 2026-11-06T00:37:28Z | Files: 219 | Described: 0/219
-<!-- gsd:codebase-meta {"generatedAt":"2026-11-06T00:37:28Z","fingerprint":"1ce472bfb2e0a28814dfefe9882e7dcdb4c2e792","fileCount":219,"truncated":false} -->
+Generated: 2026-11-06T01:41:26Z | Files: 223 | Described: 0/223
+<!-- gsd:codebase-meta {"generatedAt":"2026-11-06T01:41:26Z","fingerprint":"cc025e9e3566f03f9816e662c2d9195a1df99e28","fileCount":223,"truncated":false} -->
 
 ### (root)/
 - `.gitignore`
@@ -85,6 +85,10 @@ Generated: 2026-11-06T00:37:28Z | Files: 219 | Described: 0/219
 - `app/build.gradle.kts`
 - `app/proguard-rules.pro`
 
+### app/src/androidTest/java/com/usagecontrol/
+- `app/src/androidTest/java/com/usagecontrol/NotificationActionsTest.kt`
+- `app/src/androidTest/java/com/usagecontrol/SettingsBackTest.kt`
+
 ### app/src/androidTest/java/com/usagecontrol/db/
 - `app/src/androidTest/java/com/usagecontrol/db/MigrationTest.kt`
 - `app/src/androidTest/java/com/usagecontrol/db/NotificationDaoTest.kt`
@@ -103,7 +107,6 @@ Generated: 2026-11-06T00:37:28Z | Files: 219 | Described: 0/219
 
 ### app/src/main/java/com/usagecontrol/navigation/
 - `app/src/main/java/com/usagecontrol/navigation/AppNavigation.kt`
-- `app/src/main/java/com/usagecontrol/navigation/PlaceholderScreens.kt`
 
 ### app/src/main/res/drawable/
 - `app/src/main/res/drawable/ic_launcher_background.xml`
@@ -114,8 +117,13 @@ Generated: 2026-11-06T00:37:28Z | Files: 219 | Described: 0/219
 - `app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml`
 
 ### app/src/main/res/values/
+- `app/src/main/res/values/colors.xml`
 - `app/src/main/res/values/strings.xml`
 - `app/src/main/res/values/themes.xml`
+
+### app/src/main/res/values-night/
+- `app/src/main/res/values-night/colors.xml`
+- `app/src/main/res/values-night/themes.xml`
 
 ### core/core-common/
 - `core/core-common/build.gradle.kts`

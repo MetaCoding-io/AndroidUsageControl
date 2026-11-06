@@ -67,4 +67,4 @@ The screens have not been exercised on a device; there are no Compose UI tests y
 - `feature/feature-notifications/src/test/java/com/usagecontrol/feature/notifications/apps/AppsLogicTest.kt`
 - `app/src/main/java/com/usagecontrol/MainActivity.kt`
 - `app/src/main/java/com/usagecontrol/navigation/AppNavigation.kt`
-<!-- gsd:state-version=156:1 -->
+<!-- gsd:state-version=161:1 -->

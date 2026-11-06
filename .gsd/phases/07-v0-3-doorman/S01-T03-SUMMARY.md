@@ -71,4 +71,4 @@ None. Visual check of the theme is deferred to the T04 preview gallery.
 - `core/core-ui/build.gradle.kts`
 - `app/src/main/java/com/usagecontrol/MainActivity.kt`
 - `feature/feature-screentime/src/main/java/com/usagecontrol/feature/screentime/BlockOverlayActivity.kt`
-<!-- gsd:state-version=156:1 -->
+<!-- gsd:state-version=161:1 -->
