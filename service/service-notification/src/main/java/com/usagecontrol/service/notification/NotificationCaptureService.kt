@@ -7,15 +7,19 @@ import android.service.notification.StatusBarNotification
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.usagecontrol.core.common.AppNameResolver
+import com.usagecontrol.core.database.LaneRepository
 import com.usagecontrol.core.database.dao.LiveNotificationDao
 import com.usagecontrol.core.database.dao.NotificationDao
 import com.usagecontrol.core.database.entity.LiveNotificationEntity
 import com.usagecontrol.core.database.entity.NotificationEntity
 import com.usagecontrol.core.model.ActionType
 import com.usagecontrol.core.model.NotificationAction
+import com.usagecontrol.core.model.Route
 import com.usagecontrol.core.model.RulePillar
 import com.usagecontrol.core.rules.EvaluationContext
 import com.usagecontrol.core.rules.LaneInput
+import com.usagecontrol.core.rules.LaneResolver
+import com.usagecontrol.core.rules.Resolution
 import com.usagecontrol.core.rules.ProvisionalLaneClassifier
 import com.usagecontrol.core.rules.RuleEngine
 import dagger.hilt.android.AndroidEntryPoint
@@ -46,6 +50,8 @@ class NotificationCaptureService : NotificationListenerService() {
     @Inject lateinit var ruleEngine: RuleEngine
     @Inject lateinit var iconStore: IconStore
     @Inject lateinit var pendingIntentCache: PendingIntentCache
+    @Inject lateinit var laneRepository: LaneRepository
+    @Inject lateinit var screenerNotifier: ScreenerNotifier
 
     private val errorHandler = CoroutineExceptionHandler { _, e ->
         Log.e(TAG, "capture failed", e)
@@ -90,6 +96,7 @@ class NotificationCaptureService : NotificationListenerService() {
     private suspend fun handlePosted(sbn: StatusBarNotification, rankingMap: RankingMap?, applyRules: Boolean) {
         val notification = sbn.notification ?: return
         val key = sbn.key
+        if (ScreenerMapping.isOwnScreenerPost(sbn.packageName, notification.channelId, packageName)) return
 
         cacheIntents(key, notification)
 
@@ -101,12 +108,66 @@ class NotificationCaptureService : NotificationListenerService() {
         // A notification that stopped being ongoing leaves the live table.
         liveNotificationDao.deleteByKey(key)
 
-        val entity = buildEntity(sbn, notification, rankingMap)
+        val (built, laneInput) = buildEntity(sbn, notification, rankingMap)
+        val personKey = Route.personKeyOf(built.shortcutId, built.title)
+        val resolution = resolveLane(sbn.packageName, laneInput, personKey)
+        val entity = if (resolution == null) built else built.copy(laneId = resolution.laneId)
         val recordId = notificationDao.upsertByKey(entity)
         val updateCount = notificationDao.getById(recordId)?.updateCount ?: 0
-        Log.d(TAG, "posted key=$key id=$recordId updateCount=$updateCount lane=${entity.provisionalLane}")
+        Log.d(TAG, "posted key=$key id=$recordId updateCount=$updateCount lane=${entity.provisionalLane} laneId=${entity.laneId}")
 
         if (applyRules) applyDismissRules(sbn, entity, recordId)
+        if (resolution != null) maybeScreen(entity, resolution, personKey, interactive = applyRules)
+    }
+
+    /**
+     * Resolves the lane for a post (person > channel > app route > category default).
+     * A database failure files the row without a lane rather than dropping the capture.
+     */
+    private suspend fun resolveLane(packageName: String, input: LaneInput, personKey: String?): Resolution? = try {
+        val resolution = LaneResolver.resolve(
+            input = input,
+            packageName = packageName,
+            personKey = personKey,
+            routes = laneRepository.getRoutesFor(packageName),
+            lanes = laneRepository.getLanes(),
+        )
+        Log.d(LANES_TAG, "resolved pkg=$packageName lane=${resolution.laneId} source=${resolution.source} screen=${resolution.needsScreening}")
+        resolution
+    } catch (e: Exception) {
+        Log.w(LANES_TAG, "lane resolution failed for pkg=$packageName; filing without lane", e)
+        null
+    }
+
+    /** Posts the one-time Screener prompt for an unrouted sender (R014). */
+    private suspend fun maybeScreen(
+        entity: NotificationEntity,
+        resolution: Resolution,
+        personKey: String?,
+        interactive: Boolean,
+    ) {
+        val screen = ScreenerMapping.shouldScreen(
+            needsScreening = resolution.needsScreening,
+            packageName = entity.packageName,
+            ownPackage = packageName,
+            isGroupSummary = entity.isGroupSummary,
+            interactive = interactive,
+        )
+        if (!screen) return
+        val target = ScreenerMapping.targetFor(entity.packageName, entity.isConversation, personKey)
+        if (screenerNotifier.alreadyPrompted(target)) return
+        try {
+            screenerNotifier.post(
+                target = target,
+                appName = entity.appName,
+                title = entity.title,
+                text = entity.text,
+                lanes = laneRepository.getLanes(),
+                suggestedLaneId = resolution.laneId,
+            )
+        } catch (e: Exception) {
+            Log.w(LANES_TAG, "screener post failed for ${target.dedupeKey}", e)
+        }
     }
 
     private suspend fun handleRemoved(sbn: StatusBarNotification, reason: Int) {
@@ -228,7 +289,7 @@ class NotificationCaptureService : NotificationListenerService() {
         sbn: StatusBarNotification,
         notification: Notification,
         rankingMap: RankingMap?,
-    ): NotificationEntity {
+    ): Pair<NotificationEntity, LaneInput> {
         val extras = notification.extras
         val ranking = rankingMap?.let { map -> Ranking().takeIf { map.getRanking(sbn.key, it) } }
 
@@ -246,16 +307,15 @@ class NotificationCaptureService : NotificationListenerService() {
         val actions = notification.actions.orEmpty().filterNotNull()
         val hasRemoteInput = actions.any { !it.remoteInputs.isNullOrEmpty() }
 
-        val lane = ProvisionalLaneClassifier.classify(
-            LaneInput(
-                category = notification.category,
-                channelId = channelId,
-                importance = importance,
-                isConversation = isConversation,
-                isOngoing = sbn.isOngoing,
-                hasRemoteInputAction = hasRemoteInput,
-            ),
+        val laneInput = LaneInput(
+            category = notification.category,
+            channelId = channelId,
+            importance = importance,
+            isConversation = isConversation,
+            isOngoing = sbn.isOngoing,
+            hasRemoteInputAction = hasRemoteInput,
         )
+        val lane = ProvisionalLaneClassifier.classify(laneInput)
 
         return NotificationEntity(
             packageName = sbn.packageName,
@@ -287,7 +347,7 @@ class NotificationCaptureService : NotificationListenerService() {
             provisionalLane = lane.name,
             messagesJson = messagesJson(notification),
             actionsJson = actionsJson(actions),
-        )
+        ) to laneInput
     }
 
     private fun messagesJson(notification: Notification): String? = try {
@@ -324,6 +384,7 @@ class NotificationCaptureService : NotificationListenerService() {
 
     companion object {
         private const val TAG = "NotificationCapture"
+        private const val LANES_TAG = "Lanes"
 
         /** The bound listener, or null while unbound; used by [NotificationActionsImpl]. */
         @Volatile

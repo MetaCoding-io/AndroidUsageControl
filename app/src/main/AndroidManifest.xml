@@ -55,6 +55,12 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- Screener sheet deep link (ScreenerLink) -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="doorman" android:host="screener" />
+            </intent-filter>
         </activity>
 
         <!-- UsageControlApp supplies WorkManager's Configuration (HiltWorkerFactory),

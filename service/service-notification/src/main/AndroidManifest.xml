@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+        <!-- Screener lane taps (explicit, in-app PendingIntents only) -->
+        <receiver
+            android:name="com.usagecontrol.service.notification.ScreenerActionReceiver"
+            android:exported="false" />
+    </application>
+
+</manifest>
