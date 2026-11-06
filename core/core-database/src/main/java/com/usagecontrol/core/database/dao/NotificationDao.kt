@@ -85,6 +85,7 @@ interface NotificationDao {
             largeIconPath = COALESCE(:largeIconPath, largeIconPath),
             messagesJson = :messagesJson, actionsJson = :actionsJson,
             provisionalLane = COALESCE(:provisionalLane, provisionalLane),
+            laneId = COALESCE(:laneId, laneId),
             updateCount = updateCount + 1
         WHERE id = :id
     """)
@@ -102,6 +103,7 @@ interface NotificationDao {
         messagesJson: String?,
         actionsJson: String?,
         provisionalLane: String?,
+        laneId: Long? = null,
     ): Int
 
     /**
@@ -131,6 +133,7 @@ interface NotificationDao {
             messagesJson = entity.messagesJson,
             actionsJson = entity.actionsJson,
             provisionalLane = entity.provisionalLane,
+            laneId = entity.laneId,
         )
         return existingId
     }

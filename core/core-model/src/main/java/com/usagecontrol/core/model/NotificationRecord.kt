@@ -34,6 +34,7 @@ data class NotificationRecord(
     val provisionalLane: String? = null,
     val messagesJson: String? = null,
     val actionsJson: String? = null,
+    val laneId: Long? = null,
 )
 
 enum class NotificationAction {

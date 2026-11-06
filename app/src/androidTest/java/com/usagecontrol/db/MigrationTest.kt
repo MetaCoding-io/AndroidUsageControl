@@ -4,7 +4,9 @@ import androidx.room.testing.MigrationTestHelper
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.usagecontrol.core.database.UsageControlDatabase
+import com.usagecontrol.core.model.DefaultLanes
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -65,6 +67,66 @@ class MigrationTest {
         db.query("SELECT COUNT(*) FROM live_notifications").use { c ->
             assertTrue(c.moveToFirst())
             assertEquals(0, c.getInt(0))
+        }
+        db.close()
+    }
+
+    @Test
+    fun migrate4To5_addsLanesRoutesAndNullLaneId() {
+        helper.createDatabase(dbName, 4).use { db ->
+            db.execSQL(
+                "INSERT INTO notifications (packageName, appName, title, text, subText, category, " +
+                    "priority, timestamp, groupKey, isOngoing, userAction, actionTimestamp, " +
+                    "ruleIdIfAutoDismissed, `key`, channelId) VALUES ('com.example.a', 'A', 't', 'x', NULL, NULL, " +
+                    "0, 1000, NULL, 0, 'NONE', NULL, NULL, 'k1', 'promo')"
+            )
+        }
+
+        val db = helper.runMigrationsAndValidate(dbName, 5, true, UsageControlDatabase.MIGRATION_4_5)
+
+        db.query("SELECT `key`, channelId, laneId FROM notifications").use { c ->
+            assertEquals(1, c.count)
+            assertTrue(c.moveToFirst())
+            assertEquals("k1", c.getString(0))
+            assertEquals("promo", c.getString(1))
+            assertTrue("existing rows are unrouted", c.isNull(2))
+        }
+
+        db.query("SELECT id, name, policy, isDefault FROM lanes ORDER BY sortOrder").use { c ->
+            assertEquals(6, c.count)
+            DefaultLanes.all.forEach { lane ->
+                assertTrue(c.moveToNext())
+                assertEquals(lane.id, c.getLong(0))
+                assertEquals(lane.name, c.getString(1))
+                assertEquals(lane.policy.name, c.getString(2))
+                assertEquals(1, c.getInt(3))
+            }
+            assertFalse(c.moveToNext())
+        }
+
+        db.query("SELECT COUNT(*) FROM routes").use { c ->
+            assertTrue(c.moveToFirst())
+            assertEquals(0, c.getInt(0))
+        }
+
+        // Re-seeding is idempotent (INSERT OR IGNORE on fixed ids).
+        UsageControlDatabase.seedDefaultLanes(db)
+        db.query("SELECT COUNT(*) FROM lanes").use { c ->
+            assertTrue(c.moveToFirst())
+            assertEquals(6, c.getInt(0))
+        }
+        db.close()
+    }
+
+    @Test
+    fun migrate3To5_chainsMigrations() {
+        helper.createDatabase(dbName, 3).close()
+        val db = helper.runMigrationsAndValidate(
+            dbName, 5, true, UsageControlDatabase.MIGRATION_3_4, UsageControlDatabase.MIGRATION_4_5,
+        )
+        db.query("SELECT COUNT(*) FROM lanes").use { c ->
+            assertTrue(c.moveToFirst())
+            assertEquals(6, c.getInt(0))
         }
         db.close()
     }

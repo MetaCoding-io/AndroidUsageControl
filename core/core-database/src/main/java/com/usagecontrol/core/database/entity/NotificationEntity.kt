@@ -12,6 +12,7 @@ import androidx.room.PrimaryKey
         Index("timestamp"),
         Index("userAction"),
         Index(value = ["key"], unique = true),
+        Index("laneId"),
     ]
 )
 data class NotificationEntity(
@@ -57,4 +58,6 @@ data class NotificationEntity(
     val provisionalLane: String? = null,
     val messagesJson: String? = null,
     val actionsJson: String? = null,
+    // v5: resolved Lane id (lanes.id); NULL until routed
+    val laneId: Long? = null,
 )

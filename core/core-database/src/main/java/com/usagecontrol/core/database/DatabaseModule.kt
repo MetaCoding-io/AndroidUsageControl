@@ -3,8 +3,10 @@ package com.usagecontrol.core.database
 import android.content.Context
 import androidx.room.Room
 import com.usagecontrol.core.database.dao.ContextSnapshotDao
+import com.usagecontrol.core.database.dao.LaneDao
 import com.usagecontrol.core.database.dao.LiveNotificationDao
 import com.usagecontrol.core.database.dao.NotificationDao
+import com.usagecontrol.core.database.dao.RouteDao
 import com.usagecontrol.core.database.dao.RuleDao
 import com.usagecontrol.core.database.dao.SoundPresetDao
 import com.usagecontrol.core.database.dao.SuggestionDao
@@ -32,7 +34,9 @@ object DatabaseModule {
                 UsageControlDatabase.MIGRATION_1_2,
                 UsageControlDatabase.MIGRATION_2_3,
                 UsageControlDatabase.MIGRATION_3_4,
+                UsageControlDatabase.MIGRATION_4_5,
             )
+            .addCallback(UsageControlDatabase.SEED_CALLBACK)
             .build()
     }
 
@@ -56,4 +60,10 @@ object DatabaseModule {
 
     @Provides
     fun provideLiveNotificationDao(db: UsageControlDatabase): LiveNotificationDao = db.liveNotificationDao()
+
+    @Provides
+    fun provideLaneDao(db: UsageControlDatabase): LaneDao = db.laneDao()
+
+    @Provides
+    fun provideRouteDao(db: UsageControlDatabase): RouteDao = db.routeDao()
 }

@@ -2,7 +2,9 @@ package com.usagecontrol.core.database
 
 import com.usagecontrol.core.database.dao.DismissStatsRow
 import com.usagecontrol.core.database.entity.ContextSnapshotEntity
+import com.usagecontrol.core.database.entity.LaneEntity
 import com.usagecontrol.core.database.entity.NotificationEntity
+import com.usagecontrol.core.database.entity.RouteEntity
 import com.usagecontrol.core.database.entity.RuleEntity
 import com.usagecontrol.core.database.entity.SoundPresetEntity
 import com.usagecontrol.core.database.entity.SuggestionEntity
@@ -47,6 +49,7 @@ fun NotificationEntity.toModel() = NotificationRecord(
     provisionalLane = provisionalLane,
     messagesJson = messagesJson,
     actionsJson = actionsJson,
+    laneId = laneId,
 )
 
 fun NotificationRecord.toEntity() = NotificationEntity(
@@ -83,6 +86,7 @@ fun NotificationRecord.toEntity() = NotificationEntity(
     provisionalLane = provisionalLane,
     messagesJson = messagesJson,
     actionsJson = actionsJson,
+    laneId = laneId,
 )
 
 // -- ContextSnapshot --
@@ -343,3 +347,43 @@ private fun mapToJson(map: Map<String, String>): String {
     map.forEach { (k, v) -> obj.put(k, v) }
     return obj.toString()
 }
+
+// -- Lane / Route --
+
+fun LaneEntity.toModel() = Lane(
+    id = id,
+    name = name,
+    colorArgb = colorArgb,
+    policy = LanePolicy.fromName(policy) ?: LanePolicy.Batched,
+    decayMinutes = decayMinutes,
+    sound = sound,
+    breakthroughsJson = breakthroughsJson,
+    isDefault = isDefault,
+    sortOrder = sortOrder,
+)
+
+fun Lane.toEntity() = LaneEntity(
+    id = id,
+    name = name,
+    colorArgb = colorArgb,
+    policy = policy.name,
+    decayMinutes = decayMinutes,
+    sound = sound,
+    breakthroughsJson = breakthroughsJson,
+    isDefault = isDefault,
+    sortOrder = sortOrder,
+)
+
+/** Unknown kinds (e.g. from a future schema) map to null and are skipped by callers. */
+fun RouteEntity.toModelOrNull(): Route? = RouteKind.fromName(kind)?.let {
+    Route(id = id, kind = it, packageName = packageName, key = key, laneId = laneId, createdAt = createdAt)
+}
+
+fun Route.toEntity() = RouteEntity(
+    id = id,
+    kind = kind.name,
+    packageName = packageName,
+    key = if (kind == RouteKind.APP) "" else key,
+    laneId = laneId,
+    createdAt = createdAt,
+)
