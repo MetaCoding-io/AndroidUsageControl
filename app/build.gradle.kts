@@ -46,6 +46,8 @@ android {
     packaging { resources { excludes += "/META-INF/{AL2.0,LGPL2.1}" } }
 }
 
+hilt { enableAggregatingTask = true }
+
 dependencies {
     // Core modules
     implementation(project(":core:core-common"))

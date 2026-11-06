@@ -14,6 +14,8 @@ android {
     }
 }
 
+hilt { enableAggregatingTask = true }
+
 dependencies {
     implementation(project(":core:core-model"))
     implementation(project(":core:core-database"))
