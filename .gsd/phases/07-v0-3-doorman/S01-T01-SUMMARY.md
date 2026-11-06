@@ -97,4 +97,4 @@ Remaining deprecation warnings (not errors): Slider value overload, Icons.Filled
 - `app/src/main/AndroidManifest.xml`
 - `core/core-ui/build.gradle.kts`
 - `service/service-usage/src/main/java/com/usagecontrol/service/usage/UsageMonitorService.kt`
-<!-- gsd:state-version=161:1 -->
+<!-- gsd:state-version=186:1 -->

@@ -58,4 +58,4 @@ Root cause is inferred, not proven, because the crash never reproduced. If it co
 - `gradle.properties`
 - `app/build.gradle.kts`
 - `service/service-usage/build.gradle.kts`
-<!-- gsd:state-version=178:1 -->
+<!-- gsd:state-version=186:1 -->

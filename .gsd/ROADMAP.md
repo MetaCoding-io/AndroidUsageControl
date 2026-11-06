@@ -2,7 +2,7 @@
 
 ## Milestones
 
-- ⬜ **M007: v0.3 Doorman** (`depends:[—]`)
+- ✅ **M007: v0.3 Doorman** (`depends:[—]`)
 - ⬜ **M008: v0.4 Lanes** (`depends:[M007]`)
 - ⬜ **M009: v0.5 Modes and bridge** (`depends:[M008]`)
 - ⬜ **M006: v1.0 Stable Release** (`depends:[M009]`)

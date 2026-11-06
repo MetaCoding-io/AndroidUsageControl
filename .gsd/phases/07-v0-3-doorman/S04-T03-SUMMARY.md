@@ -77,4 +77,4 @@ Full `./gradlew assembleDebug check :app:assembleDebugAndroidTest` exited 0, inc
 - `app/src/main/java/com/usagecontrol/MainActivity.kt`
 - `core/core-common/build.gradle.kts`
 - `feature/feature-lockcontrol/build.gradle.kts`
-<!-- gsd:state-version=161:1 -->
+<!-- gsd:state-version=186:1 -->

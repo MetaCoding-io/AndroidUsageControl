@@ -54,4 +54,4 @@ Not yet exercised on a device or emulator. Bundle expansion state is in-memory o
 - `feature/feature-notifications/src/main/java/com/usagecontrol/feature/notifications/NotificationIcon.kt`
 - `feature/feature-notifications/src/test/java/com/usagecontrol/feature/notifications/NotificationIconPathTest.kt`
 - `app/src/main/java/com/usagecontrol/MainActivity.kt`
-<!-- gsd:state-version=161:1 -->
+<!-- gsd:state-version=186:1 -->

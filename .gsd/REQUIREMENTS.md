@@ -48,38 +48,6 @@ This file is the explicit capability and coverage contract for the project.
 - Why it matters: Each adds friction or breaks trust for an offline utility app
 - Source: .planning/REQUIREMENTS.md Out of Scope
 
-### R010 — Brand and theme (BRND-01..06): Doorman label + LED-dot adaptive icon, DoormanTheme static dark/light, LocalLaneColors tokens, Manrope/DM Mono with tabular numerals, MaterialExpressiveTheme on material3 1.5.0-beta02, shared core-ui components with previews
-- Class: launchability
-- Status: active
-- Description: Brand and theme (BRND-01..06): Doorman label + LED-dot adaptive icon, DoormanTheme static dark/light, LocalLaneColors tokens, Manrope/DM Mono with tabular numerals, MaterialExpressiveTheme on material3 1.5.0-beta02, shared core-ui components with previews
-- Why it matters: App needs an identity where lane colour is semantic
-- Source: .planning/research/DOORMAN-MILESTONES.md v0.3
-- Primary owning slice: M007/S01
-
-### R011 — Listener foundation (LSTN-01..09): store key/channel/importance/conversation/flags; icons as files; actions and in-memory PendingIntent cache; key-matched removals with reason; upsert on re-post; ongoing as live state; reconcile on connect; MessagingStyle messages; provisional lane classification. Room v3→v4 without data loss
-- Class: core-capability
-- Status: active
-- Description: Listener foundation (LSTN-01..09): store key/channel/importance/conversation/flags; icons as files; actions and in-memory PendingIntent cache; key-matched removals with reason; upsert on re-post; ongoing as live state; reconcile on connect; MessagingStyle messages; provisional lane classification. Room v3→v4 without data loss
-- Why it matters: Current listener matches by timestamp, duplicates updates and captures nothing visual; blocks every notification feature
-- Source: DESIGN-REVIEW.md §1.3, DOORMAN-MILESTONES.md v0.3
-- Primary owning slice: M007/S02
-
-### R012 — Shell and Now (SHEL-01..04, NOW-01..10): Now/Apps/Modes tabs with Settings gear; time-sectioned stream with lane LED rows and bundles; swipe archive with 10 s undo; swipe snooze to clock time; search; hero interruption count; recently dismissed; tap opens original contentIntent; context strip
-- Class: primary-user-loop
-- Status: active
-- Description: Shell and Now (SHEL-01..04, NOW-01..10): Now/Apps/Modes tabs with Settings gear; time-sectioned stream with lane LED rows and bundles; swipe archive with 10 s undo; swipe snooze to clock time; search; hero interruption count; recently dismissed; tap opens original contentIntent; context strip
-- Why it matters: Now is the daily surface of the product
-- Source: DOORMAN-MILESTONES.md v0.3
-- Primary owning slice: M007/S03
-
-### R013 — Apps and Modes v1 (APPS-01/02, MODE-01): apps list by alerts/day with sparkline and dismiss hint; app profile with ring, median time to act, hourly bars, channels, screen-time limit, suggestions; Modes tab with preset cards, context strip and screen-time summary
-- Class: primary-user-loop
-- Status: active
-- Description: Apps and Modes v1 (APPS-01/02, MODE-01): apps list by alerts/day with sparkline and dismiss hint; app profile with ring, median time to act, hourly bars, channels, screen-time limit, suggestions; Modes tab with preset cards, context strip and screen-time summary
-- Why it matters: Every v0.2 feature needs a home in the three-tab shell
-- Source: DOORMAN-MILESTONES.md v0.3
-- Primary owning slice: M007/S04
-
 ### R014 — Lanes and Screener (LANE, SCRN): lane entity (name, colour, policy Instant/Batched/Quiet/Digest/Blocked, decay, sound, breakthroughs); six seeded defaults; per-app/channel/person routes; new senders screened once with one-tap routing that re-files history; category defaults until screened
 - Class: differentiator
 - Status: active
@@ -140,6 +108,42 @@ This file is the explicit capability and coverage contract for the project.
 - Source: .planning/REQUIREMENTS.md v0.2
 - Primary owning slice: M002
 
+### R010 — Brand and theme (BRND-01..06): Doorman label + LED-dot adaptive icon, DoormanTheme static dark/light, LocalLaneColors tokens, Manrope/DM Mono with tabular numerals, MaterialExpressiveTheme on material3 1.5.0-beta02, shared core-ui components with previews
+- Class: launchability
+- Status: validated
+- Description: Brand and theme (BRND-01..06): Doorman label + LED-dot adaptive icon, DoormanTheme static dark/light, LocalLaneColors tokens, Manrope/DM Mono with tabular numerals, MaterialExpressiveTheme on material3 1.5.0-beta02, shared core-ui components with previews
+- Why it matters: App needs an identity where lane colour is semantic
+- Source: .planning/research/DOORMAN-MILESTONES.md v0.3
+- Primary owning slice: M007/S01
+- Validation: M007: Doorman label and dark theme observed on emulator; build green
+
+### R011 — Listener foundation (LSTN-01..09): store key/channel/importance/conversation/flags; icons as files; actions and in-memory PendingIntent cache; key-matched removals with reason; upsert on re-post; ongoing as live state; reconcile on connect; MessagingStyle messages; provisional lane classification. Room v3→v4 without data loss
+- Class: core-capability
+- Status: validated
+- Description: Listener foundation (LSTN-01..09): store key/channel/importance/conversation/flags; icons as files; actions and in-memory PendingIntent cache; key-matched removals with reason; upsert on re-post; ongoing as live state; reconcile on connect; MessagingStyle messages; provisional lane classification. Room v3→v4 without data loss
+- Why it matters: Current listener matches by timestamp, duplicates updates and captures nothing visual; blocks every notification feature
+- Source: DESIGN-REVIEW.md §1.3, DOORMAN-MILESTONES.md v0.3
+- Primary owning slice: M007/S02
+- Validation: M007: on-device post/update/snooze → 1 row, updateCount=1, SNOOZED, icon file; MigrationTest v3→v4 + NotificationDaoTest pass
+
+### R012 — Shell and Now (SHEL-01..04, NOW-01..10): Now/Apps/Modes tabs with Settings gear; time-sectioned stream with lane LED rows and bundles; swipe archive with 10 s undo; swipe snooze to clock time; search; hero interruption count; recently dismissed; tap opens original contentIntent; context strip
+- Class: primary-user-loop
+- Status: validated
+- Description: Shell and Now (SHEL-01..04, NOW-01..10): Now/Apps/Modes tabs with Settings gear; time-sectioned stream with lane LED rows and bundles; swipe archive with 10 s undo; swipe snooze to clock time; search; hero interruption count; recently dismissed; tap opens original contentIntent; context strip
+- Why it matters: Now is the daily surface of the product
+- Source: DOORMAN-MILESTONES.md v0.3
+- Primary owning slice: M007/S03
+- Validation: M007: shell on device; NotificationActionsTest + SettingsBackTest pass (24/24 instrumented)
+
+### R013 — Apps and Modes v1 (APPS-01/02, MODE-01): apps list by alerts/day with sparkline and dismiss hint; app profile with ring, median time to act, hourly bars, channels, screen-time limit, suggestions; Modes tab with preset cards, context strip and screen-time summary
+- Class: primary-user-loop
+- Status: validated
+- Description: Apps and Modes v1 (APPS-01/02, MODE-01): apps list by alerts/day with sparkline and dismiss hint; app profile with ring, median time to act, hourly bars, channels, screen-time limit, suggestions; Modes tab with preset cards, context strip and screen-time summary
+- Why it matters: Every v0.2 feature needs a home in the three-tab shell
+- Source: DOORMAN-MILESTONES.md v0.3
+- Primary owning slice: M007/S04
+- Validation: M007: unit tests + assembleDebug pass; Apps/Modes in installed shell
+
 ## Deferred
 
 ### R008 — Contextual guidance and enhanced permission UX (GUID-01/02, PERM-06/07): coach marks per tab, tooltips on key UI, NLS requestRebind after grant, per-tab degraded-feature explanations
@@ -164,10 +168,10 @@ This file is the explicit capability and coverage contract for the project.
 | R007 | quality-attribute | active | M008/S04 | M007/S04 | unmapped |
 | R008 | primary-user-loop | deferred | none | none | unmapped |
 | R009 | anti-feature | active | none | none | unmapped |
-| R010 | launchability | active | M007/S01 | none | unmapped |
-| R011 | core-capability | active | M007/S02 | none | unmapped |
-| R012 | primary-user-loop | active | M007/S03 | none | unmapped |
-| R013 | primary-user-loop | active | M007/S04 | none | unmapped |
+| R010 | launchability | validated | M007/S01 | none | M007: Doorman label and dark theme observed on emulator; build green |
+| R011 | core-capability | validated | M007/S02 | none | M007: on-device post/update/snooze → 1 row, updateCount=1, SNOOZED, icon file; MigrationTest v3→v4 + NotificationDaoTest pass |
+| R012 | primary-user-loop | validated | M007/S03 | none | M007: shell on device; NotificationActionsTest + SettingsBackTest pass (24/24 instrumented) |
+| R013 | primary-user-loop | validated | M007/S04 | none | M007: unit tests + assembleDebug pass; Apps/Modes in installed shell |
 | R014 | differentiator | active | M008/S01 | none | unmapped |
 | R015 | core-capability | active | M008/S02 | M008/S03 | unmapped |
 | R016 | continuity | active | M008/S04 | none | unmapped |
@@ -175,7 +179,7 @@ This file is the explicit capability and coverage contract for the project.
 
 ## Coverage Summary
 
-- Active requirements: 13
-- Mapped to slices: 12
-- Validated: 3 (R001, R002, R003)
+- Active requirements: 9
+- Mapped to slices: 8
+- Validated: 7 (R001, R002, R003, R010, R011, R012, R013)
 - Unmapped active requirements: 1

@@ -50,4 +50,4 @@ The Settings screen has no top-bar back arrow and relies on system back. No Comp
 - `app/src/main/java/com/usagecontrol/navigation/PlaceholderScreens.kt`
 - `app/src/main/java/com/usagecontrol/MainActivity.kt`
 - `app/src/main/res/values/strings.xml`
-<!-- gsd:state-version=161:1 -->
+<!-- gsd:state-version=186:1 -->

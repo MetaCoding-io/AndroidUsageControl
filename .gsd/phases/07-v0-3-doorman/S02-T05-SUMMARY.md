@@ -49,4 +49,4 @@ The on-device adb verification is pending because no device was connected. Histo
 - `service/service-notification/src/main/java/com/usagecontrol/service/notification/NotificationCaptureService.kt`
 - `service/service-notification/src/main/java/com/usagecontrol/service/notification/CaptureMapping.kt`
 - `service/service-notification/src/test/java/com/usagecontrol/service/notification/CaptureMappingTest.kt`
-<!-- gsd:state-version=161:1 -->
+<!-- gsd:state-version=186:1 -->

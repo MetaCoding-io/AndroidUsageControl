@@ -50,4 +50,4 @@ none
 - `core/core-rules/src/main/java/com/usagecontrol/core/rules/ProvisionalLaneClassifier.kt`
 - `core/core-rules/src/test/java/com/usagecontrol/core/rules/ProvisionalLaneClassifierTest.kt`
 - `core/core-rules/build.gradle.kts`
-<!-- gsd:state-version=161:1 -->
+<!-- gsd:state-version=186:1 -->

@@ -68,4 +68,4 @@ The new instrumented DAO tests were compiled but not run because no device was a
 - `feature/feature-notifications/build.gradle.kts`
 - `feature/feature-notifications/src/main/java/com/usagecontrol/feature/notifications/NotificationsScreen.kt`
 - `app/src/androidTest/java/com/usagecontrol/db/NotificationDaoTest.kt`
-<!-- gsd:state-version=161:1 -->
+<!-- gsd:state-version=186:1 -->

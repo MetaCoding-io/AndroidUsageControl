@@ -50,4 +50,4 @@ The gallery previews compile, but I did not render them visually. No screenshot 
 - `core/core-ui/src/main/java/com/usagecontrol/core/ui/component/DoormanComponents.kt`
 - `core/core-ui/src/main/java/com/usagecontrol/core/ui/component/ComponentGallery.kt`
 - `core/core-ui/src/test/java/com/usagecontrol/core/ui/component/BundleCountLabelTest.kt`
-<!-- gsd:state-version=161:1 -->
+<!-- gsd:state-version=186:1 -->

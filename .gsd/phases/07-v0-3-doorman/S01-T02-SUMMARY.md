@@ -64,4 +64,4 @@ After resource changes, KSP incremental builds can report spurious "could not be
 - `feature/feature-settings/src/main/res/values/strings.xml`
 - `service/service-usage/src/main/res/values/strings.xml`
 - `service/service-context/src/main/res/values/strings.xml`
-<!-- gsd:state-version=161:1 -->
+<!-- gsd:state-version=186:1 -->

@@ -68,4 +68,4 @@ IconStore.save and pruneUnreferenced haven't run on a device yet; they first run
 - `feature/feature-settings/build.gradle.kts`
 - `feature/feature-settings/src/main/java/com/usagecontrol/feature/settings/CleanupWorker.kt`
 - `feature/feature-settings/src/main/java/com/usagecontrol/feature/settings/SettingsViewModel.kt`
-<!-- gsd:state-version=161:1 -->
+<!-- gsd:state-version=186:1 -->

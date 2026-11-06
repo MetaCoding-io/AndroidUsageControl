@@ -65,4 +65,4 @@ Swipe, time picker, and open/BAL behavior have not been checked on a device yet.
 - `feature/feature-notifications/src/main/java/com/usagecontrol/feature/notifications/NowStream.kt`
 - `feature/feature-notifications/src/test/java/com/usagecontrol/feature/notifications/NowStreamTest.kt`
 - `core/core-database/src/main/java/com/usagecontrol/core/database/dao/NotificationDao.kt`
-<!-- gsd:state-version=161:1 -->
+<!-- gsd:state-version=186:1 -->
