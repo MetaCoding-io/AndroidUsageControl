@@ -267,7 +267,12 @@ private fun SwipeableNotificationItem(record: NotificationRecord, actions: RowAc
         backgroundContent = { SwipeBackground(swipeState.dismissDirection) },
         onDismiss = { value ->
             when (value) {
-                SwipeToDismissBoxValue.StartToEnd -> actions.onArchive(record)
+                SwipeToDismissBoxValue.StartToEnd -> {
+                    actions.onArchive(record)
+                    // The swipe state is saveable, so a row restored by Undo would come back
+                    // already dismissed and archive itself again; settle it now.
+                    scope.launch { swipeState.snapTo(SwipeToDismissBoxValue.Settled) }
+                }
                 SwipeToDismissBoxValue.EndToStart -> {
                     // Snooze keeps the row until a time is chosen; spring back and ask.
                     scope.launch { swipeState.reset() }
