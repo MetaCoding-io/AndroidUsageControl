@@ -153,6 +153,15 @@ This file is the explicit capability and coverage contract for the project.
 - Why it matters: Follow-ups from v0.2 user testing
 - Source: .planning/REQUIREMENTS.md Future Requirements
 
+### R018 — Research app groups and on-demand app activation
+- Class: differentiator
+- Status: deferred
+- Description: Investigate named app groups with shared lifecycle policies, individual/group activation, launch shortcuts, and optional timed or screen-lock refreezing for occasional-use apps.
+- Why it matters: Keep shopping, membership-card and other occasional apps available without daily interruptions or unwanted background activity.
+- Source: User request, 2026-11-18; [research note](research/app-groups-and-on-demand-activation.md)
+- Primary owning slice: none — research only; release scheduling undecided
+- Notes: Compare native profiles, Shelter, Hail and Shizuku; distinguish notification delivery from app lifecycle control and suspension from stopping background execution. Implementation depends on capability, recovery and compatibility findings.
+
 ## Out of Scope
 
 ## Traceability
@@ -176,6 +185,7 @@ This file is the explicit capability and coverage contract for the project.
 | R015 | core-capability | active | M008/S02 | M008/S03 | unmapped |
 | R016 | continuity | active | M008/S04 | none | unmapped |
 | R017 | integration | active | M009/S03 | none | unmapped |
+| R018 | differentiator | deferred | none | none | research proposal; backend and release undecided |
 
 ## Coverage Summary
 
@@ -183,3 +193,4 @@ This file is the explicit capability and coverage contract for the project.
 - Mapped to slices: 8
 - Validated: 7 (R001, R002, R003, R010, R011, R012, R013)
 - Unmapped active requirements: 1
+- Deferred requirements: 2 (R008, R018)
